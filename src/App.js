@@ -11,6 +11,9 @@ import MainContent from './Main_Page/MainContent.js';
 import Community from './Main_Page/Community_Page/Community.js';
 import Chat from './Main_Page/Chat_Page/ChattingPage.js';
 import Search from './Main_Page/Market_Page/Search.js';
+import SearchResult from './Main_Page/Market_Page/SearchResult.js';
+import Item from './Main_Page/Market_Page/Item.js';
+import ItemPost from './Main_Page/Market_Page/ItemPost.js';
 import Profile from './Main_Page/Profile_Page/Profile.js';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -28,6 +31,9 @@ function App() {
         <Route path='/community' element={<Community />} />
         <Route path='/chat' element={<Chat />} />
         <Route path='/search' element={<Search />} />
+        <Route path='/search-result' element={<SearchResult />} />
+        <Route path='/item' element={<Item />} />
+        <Route path='/item-post' element={<ItemPost />} />
         <Route path='/profile' element={<Profile />} />
       </Routes>
     </BrowserRouter>
