@@ -8,7 +8,9 @@ function Navbar() {
         <nav className="navbar navbar-expand-md">
             <div className="container-fluid">
                 <div className="navbar-header logoCtn">
-                    <img src={logo} className="navbar-brand logo"></img>
+                    <Link className='nav-link' to='/home'>
+                        <img src={logo} className="navbar-brand logo"></img>
+                    </Link>
                 </div>
                 <ul className="navbar-nav navCtn">
                     <li className="nav-item navCommunity">
