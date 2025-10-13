@@ -25,7 +25,9 @@ function Profile() {
                     <div className="reputation">Current Reputation: {user.reputation}</div>
                 </div>
                 <div className="col-md-3 editBtnCtn">
-                    <div className="editBtn" onClick={() => console.log("Edit button clicked!")}>Edit</div>
+                    <Link to='../profileEdit'>
+                        <div className="editBtn">Edit</div>
+                    </Link>
                 </div>
             </div>
             <ul className="nav flex-column optionList">
