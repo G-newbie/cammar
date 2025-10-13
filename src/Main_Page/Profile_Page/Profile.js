@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Popup from 'reactjs-popup';
 
 import './Profile.css'
 import profile from './profile.png';
@@ -32,16 +33,24 @@ function Profile() {
             </div>
             <ul className="nav flex-column optionList">
                 <li className="nav-item optionItem">
-                    <div className="option postHistory" onClick={() => console.log("Post history clicked!")}>Post History</div>
+                    <Link to='../option'>
+                        <div className="option postHistory">Post History</div>
+                    </Link>
                 </li>
                 <li className="nav-item optionItem">
-                    <div className="option myPosts" onClick={() => console.log("My posts clicked!")}>My Posts</div>
+                    <Link to='../option'>
+                        <div className="option myPosts">My Posts</div>
+                    </Link>
                 </li>
                 <li className="nav-item optionItem">
-                    <div className="option favPosts" onClick={() => console.log("My favorite posts clicked!")}>My Favorite Posts</div>
+                    <Link to='../option'>
+                        <div className="option favPosts">My Favorite Posts</div>
+                    </Link>
                 </li>
                 <li className="nav-item optionItem">
-                    <div className="option myComments" onClick={() => console.log("My comments clicked!")}>My Comments</div>
+                    <Link to='../option'>
+                        <div className="option myComments">My Comments</div>
+                    </Link>
                 </li>
             </ul>
         </div>
