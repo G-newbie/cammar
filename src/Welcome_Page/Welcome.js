@@ -5,12 +5,12 @@ import logo from './logo.png';
 function Welcome() {
     const openSignInPage = () => {
         console.log("Sign In Clicked");
-        window.open('./SignIn', "_self");
+        window.open('./signIn', "_self");
     }
 
     const openSignUpPage = () => {
         console.log("Sign Up Clicked");
-        window.open('./SignUp', "_self");
+        window.open('./signUp', "_self");
     }
 
     return (

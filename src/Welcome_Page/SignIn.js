@@ -6,7 +6,7 @@ import googleLogo from './Google.jpeg';
 function SignIn() {
     const openGooglePage = () => {
         console.log("Continue with Google clicked");
-        window.open('./GoogleSignIn', "_self");
+        window.open('./googleSignIn', "_self");
     }
 
     return (

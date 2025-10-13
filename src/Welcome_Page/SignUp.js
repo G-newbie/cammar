@@ -7,7 +7,7 @@ import SUNYLogo from './SUNYLogo.png';
 function SignUp() {
     const openGooglePage = () => {
         console.log("Continue with Google clicked");
-        window.open('./GoogleSignIn', "_self");
+        window.open('./googleSignIn', "_self");
     }
 
     return (
