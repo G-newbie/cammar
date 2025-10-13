@@ -1,70 +1,34 @@
-# Getting Started with Create React App
+# Campus Secondhand Marketplace (AI-Powered)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Problem Statement
+While existing secondhand platforms (e.g., Carrot, Bungaejangter) are widely used, they are not always suitable for the unique needs of a campus community. Our project addresses this gap with a dedicated **AI-powered marketplace for students**.  
 
-## Available Scripts
+### Problems & Our Solutions
+1. **Trust and Safety**  
+   - *Problem:* Open platforms make it difficult to verify user identity, leading to potential scams.  
+   - *Solution:* By restricting sign-ups to school email addresses (e.g., `@sunykorea.ac.kr`), we ensure transactions occur only between verified students, creating a safer environment.  
 
-In the project directory, you can run:
+2. **Convenient Trading Environment**  
+   - *Problem:* Meeting strangers off-campus can be inconvenient and time-consuming.  
+   - *Solution:* Our platform limits trading to campus and nearby areas, making meetups fast and practical. Trading activity can also align with the academic calendar (start/end of semester).  
 
-### `npm start`
+3. **Student-Specific Items**  
+   - *Problem:* On large platforms, it is difficult to filter for student-related items like textbooks, dorm supplies, or lab equipment.  
+   - *Solution:* Our marketplace focuses on categories tailored to students’ needs: textbooks, notes, electronics, dorm essentials, and more.  
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4. **Community Building**  
+   - *Problem:* General marketplaces lack opportunities for fostering connections within the student body.  
+   - *Solution:* Peer-to-peer trading strengthens community ties, helping freshmen, exchange students, and graduating seniors connect while exchanging useful items.  
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## AI Integration
+Our project differentiates itself by embedding **AI-powered features** to enhance usability and security:  
+- **Smart Recommendations:** Personalized suggestions based on user preferences and browsing history.  
+- **Automatic Categorization:** Upload an image and the AI classifies it (e.g., "textbook", "electronics", "furniture").  
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+By combining a **student-focused environment** with **AI enhancements**, our platform provides a safe, efficient, and user-friendly way for students to buy, sell, and exchange items within their campus.  
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Team Members
+- Kitae Kim  
+- Jaeheon Park  
+- Sanghoon Lee
