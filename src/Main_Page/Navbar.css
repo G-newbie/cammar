@@ -1,0 +1,9 @@
+.navbar {
+    background-color: lightgray;
+    border-bottom-style: solid;
+    border-color: gray;
+}
+
+.logo {
+    width: 30px;
+}
