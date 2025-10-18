@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 채팅방 목록 조회
+
 export const getChatRooms = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -9,7 +9,7 @@ export const getChatRooms = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -43,7 +43,6 @@ export const getChatRooms = async () => {
     if (chatRoomsError) throw chatRoomsError;
 
     const transformedChatRooms = chatRooms.map(room => {
-      // 현재 사용자가 buyer인지 seller인지 확인
       const isBuyer = room.users_buyer_id_fkey.id === user.id;
       const otherUser = isBuyer ? room.users_seller_id_fkey : room.users_buyer_id_fkey;
       const unreadCount = isBuyer ? room.unread_by_buyer : room.unread_by_seller;
@@ -72,7 +71,7 @@ export const getChatRooms = async () => {
 
     return {
       res_code: 200,
-      res_msg: '채팅방 목록 조회 성공',
+      res_msg: 'Chat rooms list retrieved successfully',
       chat_rooms: transformedChatRooms
     };
   } catch (error) {
@@ -84,7 +83,7 @@ export const getChatRooms = async () => {
   }
 };
 
-// 2. 채팅방 생성
+
 export const createChatRoom = async (itemId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -93,11 +92,10 @@ export const createChatRoom = async (itemId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 아이템 정보 조회하여 seller_id 확인
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('seller_id')
@@ -108,7 +106,6 @@ export const createChatRoom = async (itemId) => {
 
     const sellerId = item.seller_id;
 
-    // 중복 채팅방 확인
     const { data: existingRoom, error: checkError } = await supabase
       .from('chat_rooms')
       .select('id')
@@ -120,12 +117,11 @@ export const createChatRoom = async (itemId) => {
     if (existingRoom) {
       return {
         res_code: 409,
-        res_msg: '이미 존재하는 채팅방입니다',
+        res_msg: 'Chat room already exists',
         chat_room: existingRoom
       };
     }
 
-    // 채팅방 생성
     const { data: newChatRoom, error: createError } = await supabase
       .from('chat_rooms')
       .insert([
@@ -144,7 +140,7 @@ export const createChatRoom = async (itemId) => {
 
     return {
       res_code: 201,
-      res_msg: '채팅방이 성공적으로 생성되었습니다',
+      res_msg: 'Chat room created successfully',
       chat_room: newChatRoom
     };
   } catch (error) {
@@ -156,13 +152,10 @@ export const createChatRoom = async (itemId) => {
   }
 };
 
-// 3. 아이템에서 직접 채팅방 생성
 export const createChatRoomFromItem = async (itemId) => {
-  // createChatRoom과 동일한 로직 사용
   return await createChatRoom(itemId);
 };
 
-// 4. 게시글 작성자와 채팅 시작
 export const createChatFromPostAuthor = async (postId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -171,11 +164,10 @@ export const createChatFromPostAuthor = async (postId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 게시글 작성자 정보 조회
     const { data: post, error: postError } = await supabase
       .from('community_posts')
       .select('author_id')
@@ -184,7 +176,6 @@ export const createChatFromPostAuthor = async (postId) => {
 
     if (postError) throw postError;
 
-    // 채팅방 생성 (item_id는 null로 설정)
     const { data: newChatRoom, error: createError } = await supabase
       .from('chat_rooms')
       .insert([
@@ -203,7 +194,7 @@ export const createChatFromPostAuthor = async (postId) => {
 
     return {
       res_code: 201,
-      res_msg: '채팅방이 성공적으로 생성되었습니다',
+      res_msg: 'Chat room created successfully',
       chat_room: {
         id: newChatRoom.id,
         post_author_id: post.author_id,
@@ -219,7 +210,6 @@ export const createChatFromPostAuthor = async (postId) => {
   }
 };
 
-// 5. 채팅방 접근 권한 확인
 export const checkChatRoomAccess = async (chatRoomId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -228,7 +218,7 @@ export const checkChatRoomAccess = async (chatRoomId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -245,7 +235,7 @@ export const checkChatRoomAccess = async (chatRoomId) => {
 
     return {
       res_code: 200,
-      res_msg: '채팅방 접근 권한 확인 완료',
+      res_msg: 'Chat room access permission verified',
       has_access: hasAccess,
       user_role: hasAccess ? userRole : null,
       item_id: chatRoom.item_id

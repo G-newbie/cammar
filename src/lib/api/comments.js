@@ -9,17 +9,14 @@ import {
   createSuccessResponse 
 } from './authUtils';
 
-// 1. 댓글 생성 - 보안 강화
+
 export const createComment = async (postId, commentData) => {
   try {
-    // 인증 확인
     const user = await getAuthenticatedUser();
     
-    // 입력 데이터 검증
     validateInput.uuid(postId);
     const content = validateInput.text(commentData.content, 1000);
 
-    // 댓글 생성
     const { data: newComment, error: commentError } = await supabase
       .from('comments')
       .insert([
@@ -34,7 +31,6 @@ export const createComment = async (postId, commentData) => {
 
     if (commentError) throw commentError;
 
-    // 게시글의 comment_count 증가 (안전한 SQL)
     await supabase
       .from('community_posts')
       .update({
@@ -42,7 +38,7 @@ export const createComment = async (postId, commentData) => {
       })
       .eq('id', postId);
 
-    return createSuccessResponse('댓글이 성공적으로 생성되었습니다', {
+    return createSuccessResponse('Comment created successfully', {
       id: newComment.id,
       content: newComment.content,
       author_id: newComment.author_id,
@@ -54,18 +50,14 @@ export const createComment = async (postId, commentData) => {
   }
 };
 
-// 2. 댓글 수정 - 보안 강화
 export const updateComment = async (postId, commentId, content) => {
   try {
-    // 입력 데이터 검증
     validateInput.uuid(postId);
     validateInput.uuid(commentId);
     const validatedContent = validateInput.text(content, 1000);
     
-    // 작성자 권한 확인
     await checkAuthorPermission('comments', commentId);
     
-    // post_id 검증
     const { data: comment, error: commentError } = await supabase
       .from('comments')
       .select('post_id')
@@ -75,7 +67,7 @@ export const updateComment = async (postId, commentId, content) => {
     if (commentError) throw commentError;
 
     if (comment.post_id !== postId) {
-      throw new Error('댓글이 해당 게시글에 속하지 않습니다');
+      throw new Error('Comment does not belong to this post');
     }
 
     const { data: updatedComment, error: updateError } = await supabase
@@ -90,7 +82,7 @@ export const updateComment = async (postId, commentId, content) => {
 
     if (updateError) throw updateError;
 
-    return createSuccessResponse('댓글이 성공적으로 수정되었습니다', {
+    return createSuccessResponse('Comment updated successfully', {
       id: updatedComment.id,
       content: updatedComment.content,
       updated_at: updatedComment.updated_at
@@ -100,17 +92,13 @@ export const updateComment = async (postId, commentId, content) => {
   }
 };
 
-// 3. 댓글 삭제 - 보안 강화
 export const deleteComment = async (postId, commentId) => {
   try {
-    // 입력 데이터 검증
     validateInput.uuid(postId);
     validateInput.uuid(commentId);
     
-    // 작성자 권한 확인 및 post_id 가져오기
     const { record: comment } = await checkAuthorPermission('comments', commentId);
 
-    // 댓글 삭제
     const { error: deleteError } = await supabase
       .from('comments')
       .delete()
@@ -118,7 +106,6 @@ export const deleteComment = async (postId, commentId) => {
 
     if (deleteError) throw deleteError;
 
-    // 게시글의 comment_count 감소 (안전한 SQL)
     await supabase
       .from('community_posts')
       .update({
@@ -126,7 +113,7 @@ export const deleteComment = async (postId, commentId) => {
       })
       .eq('id', comment.post_id);
 
-    return createSuccessResponse('댓글이 성공적으로 삭제되었습니다');
+    return createSuccessResponse('Comment deleted successfully');
   } catch (error) {
     return createErrorResponse(400, error.message, error);
   }

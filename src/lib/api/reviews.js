@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 리뷰 생성
 export const createReview = async (reviewData) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -15,7 +14,6 @@ export const createReview = async (reviewData) => {
 
     const { reviewee_id, item_id, rating, comment } = reviewData;
 
-    // 본인에게 리뷰를 남길 수 없도록 체크
     if (reviewee_id === user.id) {
       return {
         res_code: 400,
@@ -23,7 +21,6 @@ export const createReview = async (reviewData) => {
       };
     }
 
-    // 중복 리뷰 체크
     const { data: existingReview, error: checkError } = await supabase
       .from('reviews')
       .select('id')
@@ -39,7 +36,7 @@ export const createReview = async (reviewData) => {
       };
     }
 
-    // 리뷰 생성
+       
     const { data: newReview, error: reviewError } = await supabase
       .from('reviews')
       .insert([
@@ -56,7 +53,6 @@ export const createReview = async (reviewData) => {
 
     if (reviewError) throw reviewError;
 
-    // 사용자의 total_reviews 증가
     await supabase
       .from('users')
       .update({
@@ -64,7 +60,6 @@ export const createReview = async (reviewData) => {
       })
       .eq('id', reviewee_id);
 
-    // 사용자의 trust_score 재계산 (평균 평점 기반)
     const { data: reviews, error: reviewsError } = await supabase
       .from('reviews')
       .select('rating')
@@ -76,7 +71,7 @@ export const createReview = async (reviewData) => {
       await supabase
         .from('users')
         .update({
-          trust_score: Math.round(averageRating * 10) / 10 // 소수점 첫째 자리까지
+          trust_score: Math.round(averageRating * 10) / 10 
         })
         .eq('id', reviewee_id);
     }
@@ -95,7 +90,6 @@ export const createReview = async (reviewData) => {
   }
 };
 
-// 2. 사용자 리뷰 목록 조회
 export const getUserReviews = async (userId) => {
   try {
     const { data: reviews, error: reviewsError } = await supabase
@@ -150,7 +144,6 @@ export const getUserReviews = async (userId) => {
   }
 };
 
-// 3. 아이템 리뷰 목록 조회
 export const getItemReviews = async (itemId) => {
   try {
     const { data: reviews, error: reviewsError } = await supabase
@@ -197,7 +190,6 @@ export const getItemReviews = async (itemId) => {
   }
 };
 
-// 4. 리뷰 통계 조회
 export const getReviewStats = async (userId) => {
   try {
     const { data: reviews, error: reviewsError } = await supabase

@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 이미지 업로드
 export const uploadImage = async (file, bucketName = 'images') => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -13,7 +12,6 @@ export const uploadImage = async (file, bucketName = 'images') => {
       };
     }
 
-    // 파일 타입 검증
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return {
@@ -22,7 +20,7 @@ export const uploadImage = async (file, bucketName = 'images') => {
       };
     }
 
-    // 파일 크기 검증 (5MB 제한)
+    
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       return {
@@ -31,11 +29,8 @@ export const uploadImage = async (file, bucketName = 'images') => {
       };
     }
 
-    // 고유한 파일명 생성
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-    // Supabase Storage에 파일 업로드
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketName)
       .upload(fileName, file, {
@@ -45,7 +40,6 @@ export const uploadImage = async (file, bucketName = 'images') => {
 
     if (uploadError) throw uploadError;
 
-    // 업로드된 파일의 공개 URL 가져오기
     const { data: { publicUrl } } = supabase.storage
       .from(bucketName)
       .getPublicUrl(fileName);
@@ -66,7 +60,6 @@ export const uploadImage = async (file, bucketName = 'images') => {
   }
 };
 
-// 2. 여러 이미지 업로드
 export const uploadMultipleImages = async (files, bucketName = 'images') => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -86,7 +79,6 @@ export const uploadMultipleImages = async (files, bucketName = 'images') => {
       };
     }
 
-    // 최대 5개 파일 제한
     if (files.length > 5) {
       return {
         res_code: 400,
@@ -131,7 +123,6 @@ export const uploadMultipleImages = async (files, bucketName = 'images') => {
   }
 };
 
-// 3. 이미지 삭제
 export const deleteImage = async (imageUrl, bucketName = 'images') => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -144,12 +135,10 @@ export const deleteImage = async (imageUrl, bucketName = 'images') => {
       };
     }
 
-    // URL에서 파일명 추출
     const urlParts = imageUrl.split('/');
     const fileName = urlParts[urlParts.length - 1];
     const userFolder = `${user.id}/${fileName}`;
 
-    // 파일 삭제
     const { error: deleteError } = await supabase.storage
       .from(bucketName)
       .remove([userFolder]);
@@ -169,7 +158,6 @@ export const deleteImage = async (imageUrl, bucketName = 'images') => {
   }
 };
 
-// 4. 사용자의 모든 이미지 조회
 export const getUserImages = async (bucketName = 'images') => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -182,7 +170,6 @@ export const getUserImages = async (bucketName = 'images') => {
       };
     }
 
-    // 사용자 폴더의 모든 파일 조회
     const { data: files, error: filesError } = await supabase.storage
       .from(bucketName)
       .list(user.id);

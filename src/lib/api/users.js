@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 현재 사용자 프로필 조회 - SQL 호환
 export const getCurrentUser = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -9,7 +8,7 @@ export const getCurrentUser = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -23,7 +22,7 @@ export const getCurrentUser = async () => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 프로필 조회 성공',
+      res_msg: 'User profile retrieved successfully',
       user: userProfile
     };
   } catch (error) {
@@ -35,45 +34,8 @@ export const getCurrentUser = async () => {
   }
 };
 
-// 2. 사용자 프로필 조회 (기존 함수명 유지)
 export const getUserProfile = getCurrentUser;
 
-// 3. 다른 사용자 프로필 조회 - SQL 호환
-export const getOtherUserProfile = async (userId) => {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) throw authError;
-
-    if (!user) {
-      return {
-        res_code: 401,
-        res_msg: '인증이 필요합니다'
-      };
-    }
-
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('id, display_name, profile_image_url, trust_score, total_reviews, created_at')
-      .eq('id', userId)
-      .single();
-
-    if (profileError) throw profileError;
-
-    return {
-      res_code: 200,
-      res_msg: '사용자 프로필 조회 성공',
-      user: userProfile
-    };
-  } catch (error) {
-    return {
-      res_code: 400,
-      res_msg: error.message,
-      error: error
-    };
-  }
-};
-
-// 4. 사용자 프로필 수정 - SQL 호환
 export const updateUserProfile = async (updates) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -82,7 +44,7 @@ export const updateUserProfile = async (updates) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -100,7 +62,7 @@ export const updateUserProfile = async (updates) => {
 
     return {
       res_code: 200,
-      res_msg: '프로필이 성공적으로 업데이트되었습니다',
+      res_msg: 'Profile updated successfully',
       user: updatedProfile
     };
   } catch (error) {
@@ -112,7 +74,6 @@ export const updateUserProfile = async (updates) => {
   }
 };
 
-// 3. 다른 사용자 프로필 조회
 export const getOtherUserProfile = async (userId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -121,7 +82,7 @@ export const getOtherUserProfile = async (userId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -135,7 +96,7 @@ export const getOtherUserProfile = async (userId) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 프로필 조회 성공',
+      res_msg: 'User profile retrieved successfully',
       user: userProfile
     };
   } catch (error) {
@@ -147,7 +108,6 @@ export const getOtherUserProfile = async (userId) => {
   }
 };
 
-// 5. 사용자 게시글 조회 - SQL 호환
 export const getUserPosts = async (userId, options = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -156,7 +116,7 @@ export const getUserPosts = async (userId, options = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -177,7 +137,7 @@ export const getUserPosts = async (userId, options = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 게시글 조회 성공',
+      res_msg: 'User posts retrieved successfully',
       posts: posts,
       pagination: {
         current_page: page,
@@ -200,7 +160,6 @@ export const getUserPosts = async (userId, options = {}) => {
   }
 };
 
-// 6. 사용자 아이템 조회 - SQL 호환
 export const getUserItems = async (userId, options = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -209,7 +168,7 @@ export const getUserItems = async (userId, options = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -231,7 +190,7 @@ export const getUserItems = async (userId, options = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 아이템 조회 성공',
+      res_msg: 'User items retrieved successfully',
       items: items,
       pagination: {
         current_page: page,
@@ -254,7 +213,6 @@ export const getUserItems = async (userId, options = {}) => {
   }
 };
 
-// 7. 사용자 위시리스트 조회 - SQL 호환
 export const getUserWishlists = async (userId, options = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -263,7 +221,7 @@ export const getUserWishlists = async (userId, options = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -284,7 +242,7 @@ export const getUserWishlists = async (userId, options = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 위시리스트 조회 성공',
+      res_msg: 'User wishlist retrieved successfully',
       wishlists: wishlists,
       pagination: {
         current_page: page,
@@ -307,7 +265,6 @@ export const getUserWishlists = async (userId, options = {}) => {
   }
 };
 
-// 8. 사용자 리뷰 조회 - SQL 호환
 export const getUserReviews = async (userId, options = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -316,7 +273,7 @@ export const getUserReviews = async (userId, options = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -338,7 +295,7 @@ export const getUserReviews = async (userId, options = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 리뷰 조회 성공',
+      res_msg: 'User reviews retrieved successfully',
       reviews: reviews,
       pagination: {
         current_page: page,
@@ -361,7 +318,6 @@ export const getUserReviews = async (userId, options = {}) => {
   }
 };
 
-// 9. 사용자 구매 이력 조회 - SQL 호환
 export const getUserPurchases = async (userId, options = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -370,7 +326,7 @@ export const getUserPurchases = async (userId, options = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -394,7 +350,7 @@ export const getUserPurchases = async (userId, options = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 게시글 조회 성공',
+      res_msg: 'User posts retrieved successfully',
       posts: posts.map(post => ({
         id: post.id,
         title: post.title,
@@ -416,7 +372,6 @@ export const getUserPurchases = async (userId, options = {}) => {
   }
 };
 
-// 5. 사용자 판매 이력 조회
 export const getUserSales = async (userId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -425,11 +380,10 @@ export const getUserSales = async (userId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 현재 스키마에는 seller_id가 없으므로, 사용자가 등록한 아이템들을 조회
     const { data: items, error: itemsError } = await supabase
       .from('items')
       .select('id, title, price, created_at')
@@ -440,14 +394,14 @@ export const getUserSales = async (userId) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 판매 이력 조회 성공',
+      res_msg: 'User sales history retrieved successfully',
       items: items.map(item => ({
         id: item.id,
         title: item.title,
         price: item.price,
-        status: 'sold', // 현재 스키마에 status 컬럼이 없으므로 임시값
+        status: 'sold', 
         created_at: item.created_at,
-        buyer_count: 0 // 현재 스키마에 해당 정보가 없음
+        buyer_count: 0 
       }))
     };
   } catch (error) {
@@ -459,31 +413,3 @@ export const getUserSales = async (userId) => {
   }
 };
 
-// 6. 사용자 구매 이력 조회
-export const getUserPurchases = async (userId) => {
-  try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) throw authError;
-
-    if (!user) {
-      return {
-        res_code: 401,
-        res_msg: '인증이 필요합니다'
-      };
-    }
-
-    // 현재 스키마에는 구매 이력을 저장하는 테이블이 없으므로
-    // 임시로 빈 배열 반환 (실제 구현 시에는 구매 테이블이 필요)
-    return {
-      res_code: 200,
-      res_msg: '사용자 구매 이력 조회 성공',
-      items: []
-    };
-  } catch (error) {
-    return {
-      res_code: 400,
-      res_msg: error.message,
-      error: error
-    };
-  }
-};

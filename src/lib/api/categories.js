@@ -6,7 +6,7 @@ import {
   createSuccessResponse 
 } from './authUtils';
 
-// 1. 카테고리 목록 조회
+
 export const getCategories = async () => {
   try {
     const { data: categories, error: categoriesError } = await supabase
@@ -30,13 +30,12 @@ export const getCategories = async () => {
   }
 };
 
-// 2. 카테고리 생성 (관리자용)
+
 export const createCategory = async (categoryData) => {
   try {
-    // 관리자 권한 확인
+
     await checkAdminPermission();
 
-    // 입력 데이터 검증
     const name = validateInput.text(categoryData.name, 50);
     const description = validateInput.text(categoryData.description, 200);
 
@@ -59,7 +58,7 @@ export const createCategory = async (categoryData) => {
   }
 };
 
-// 3. 카테고리 수정 (관리자용)
+
 export const updateCategory = async (categoryId, updates) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -72,8 +71,7 @@ export const updateCategory = async (categoryId, updates) => {
       };
     }
 
-    // 관리자 권한 체크 필요
-
+   
     const { data: updatedCategory, error: updateError } = await supabase
       .from('categories')
       .update(updates)
@@ -97,7 +95,6 @@ export const updateCategory = async (categoryId, updates) => {
   }
 };
 
-// 4. 카테고리 삭제 (관리자용)
 export const deleteCategory = async (categoryId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -110,9 +107,7 @@ export const deleteCategory = async (categoryId) => {
       };
     }
 
-    // 관리자 권한 체크 필요
 
-    // 해당 카테고리를 사용하는 아이템이 있는지 확인
     const { data: items, error: itemsError } = await supabase
       .from('items')
       .select('id')

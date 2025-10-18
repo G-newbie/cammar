@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 아이템 검색
 export const searchItems = async (searchParams = {}) => {
   try {
     const {
@@ -30,17 +29,14 @@ export const searchItems = async (searchParams = {}) => {
         )
       `);
 
-    // 검색어 필터
     if (q) {
       query = query.or(`title.ilike.%${q}%, description.ilike.%${q}%`);
     }
 
-    // 카테고리 필터
     if (category) {
       query = query.eq('category_id', category);
     }
 
-    // 가격 범위 필터
     if (min_price !== undefined) {
       query = query.gte('price', min_price);
     }
@@ -48,7 +44,6 @@ export const searchItems = async (searchParams = {}) => {
       query = query.lte('price', max_price);
     }
 
-    // 정렬
     switch (sort) {
       case 'price_asc':
         query = query.order('price', { ascending: true });
@@ -67,7 +62,6 @@ export const searchItems = async (searchParams = {}) => {
         query = query.order('created_at', { ascending: false });
     }
 
-    // 페이지네이션
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     query = query.range(from, to);
@@ -81,7 +75,7 @@ export const searchItems = async (searchParams = {}) => {
       title: item.title,
       price: item.price,
       seller: {
-        display_name: '판매자' // TODO: 실제 판매자 정보 연결 필요
+        display_name: 'Seller' // TODO: Connect actual seller information
       },
       images: item.item_images ? item.item_images.map(img => ({
         url: img.url
@@ -92,7 +86,7 @@ export const searchItems = async (searchParams = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '검색 완료',
+      res_msg: 'Search completed',
       items: transformedItems,
       pagination: {
         current_page: page,
@@ -120,7 +114,6 @@ export const searchItems = async (searchParams = {}) => {
   }
 };
 
-// 2. 검색 기록 저장
 export const saveSearchHistory = async (searchQuery) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -129,11 +122,10 @@ export const saveSearchHistory = async (searchQuery) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 중복 검색어 체크 (최근 1시간 내 같은 검색어가 있으면 저장하지 않음)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
     const { data: recentSearch, error: checkError } = await supabase
@@ -147,7 +139,7 @@ export const saveSearchHistory = async (searchQuery) => {
     if (recentSearch) {
       return {
         res_code: 200,
-        res_msg: '최근 검색 기록이 있어 저장하지 않습니다'
+        res_msg: 'Recent search history exists, not saving'
       };
     }
 
@@ -166,7 +158,7 @@ export const saveSearchHistory = async (searchQuery) => {
 
     return {
       res_code: 201,
-      res_msg: '검색 기록이 저장되었습니다',
+      res_msg: 'Search history saved',
       search_history: searchHistory
     };
   } catch (error) {
@@ -178,7 +170,6 @@ export const saveSearchHistory = async (searchQuery) => {
   }
 };
 
-// 3. 검색 기록 조회
 export const getSearchHistory = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -187,7 +178,7 @@ export const getSearchHistory = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -202,7 +193,7 @@ export const getSearchHistory = async () => {
 
     return {
       res_code: 200,
-      res_msg: '검색 기록 조회 성공',
+      res_msg: 'Search history retrieved successfully',
       search_history: searchHistory
     };
   } catch (error) {
@@ -214,7 +205,6 @@ export const getSearchHistory = async () => {
   }
 };
 
-// 4. 개별 검색 기록 삭제
 export const deleteSearchHistory = async (historyId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -223,7 +213,7 @@ export const deleteSearchHistory = async (historyId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -237,7 +227,7 @@ export const deleteSearchHistory = async (historyId) => {
 
     return {
       res_code: 200,
-      res_msg: '검색 기록이 삭제되었습니다'
+      res_msg: 'Search history deleted'
     };
   } catch (error) {
     return {
@@ -248,7 +238,6 @@ export const deleteSearchHistory = async (historyId) => {
   }
 };
 
-// 5. 모든 검색 기록 삭제
 export const clearAllSearchHistory = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -257,7 +246,7 @@ export const clearAllSearchHistory = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -270,7 +259,7 @@ export const clearAllSearchHistory = async () => {
 
     return {
       res_code: 200,
-      res_msg: '모든 검색 기록이 삭제되었습니다'
+      res_msg: 'All search history deleted'
     };
   } catch (error) {
     return {
@@ -281,7 +270,6 @@ export const clearAllSearchHistory = async () => {
   }
 };
 
-// 6. 추천 아이템 조회 (간단한 구현)
 export const getRecommendedItems = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -290,12 +278,11 @@ export const getRecommendedItems = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 현재는 간단하게 최신 아이템들을 추천으로 반환
-    // 실제로는 사용자의 검색 기록, 관심사 등을 기반으로 추천 알고리즘 구현 필요
+      
     const { data: items, error: itemsError } = await supabase
       .from('items')
       .select(`
@@ -316,7 +303,7 @@ export const getRecommendedItems = async () => {
       title: item.title,
       price: item.price,
       seller: {
-        display_name: '판매자' // 임시값
+        display_name: 'Seller'
       },
       images: item.item_images ? item.item_images.map(img => ({
         image_url: img.url
@@ -325,7 +312,7 @@ export const getRecommendedItems = async () => {
 
     return {
       res_code: 200,
-      res_msg: '추천 아이템 조회 성공',
+      res_msg: 'Recommended items retrieved successfully',
       items: transformedItems
     };
   } catch (error) {

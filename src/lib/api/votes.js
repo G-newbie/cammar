@@ -8,22 +8,17 @@ import {
   createSuccessResponse 
 } from './authUtils';
 
-// 1. 게시글 투표 (upvote/downvote) - 보안 강화
 export const voteOnPost = async (postId, voteData) => {
   try {
-    // 인증 확인
     const user = await getAuthenticatedUser();
     
-    // 입력 데이터 검증
     validateInput.uuid(postId);
     const { vote_type } = voteData;
 
-    // vote_type 검증
     if (!['upvote', 'downvote'].includes(vote_type)) {
       throw new Error('유효하지 않은 투표 타입입니다 (upvote 또는 downvote)');
     }
 
-    // 기존 투표 확인
     const { data: existingVote, error: checkError } = await supabase
       .from('post_votes')
       .select('id, vote_type')
@@ -34,15 +29,12 @@ export const voteOnPost = async (postId, voteData) => {
     let voteResult;
 
     if (existingVote) {
-      // 기존 투표가 있는 경우
       if (existingVote.vote_type === vote_type) {
-        // 같은 투표를 다시 하는 경우 - 투표 취소
         await supabase
           .from('post_votes')
           .delete()
           .eq('id', existingVote.id);
 
-        // 게시글 투표 수 감소 (안전한 SQL)
         const updateField = vote_type === 'upvote' ? 'upvotes' : 'downvotes';
         await supabase
           .from('community_posts')
@@ -53,7 +45,6 @@ export const voteOnPost = async (postId, voteData) => {
 
         voteResult = null;
       } else {
-        // 다른 투표로 변경하는 경우 - 기존 투표 수정
         const { data: updatedVote, error: updateError } = await supabase
           .from('post_votes')
           .update({
@@ -65,7 +56,6 @@ export const voteOnPost = async (postId, voteData) => {
 
         if (updateError) throw updateError;
 
-        // 게시글 투표 수 업데이트 (안전한 SQL)
         const oldField = existingVote.vote_type === 'upvote' ? 'upvotes' : 'downvotes';
         const newField = vote_type === 'upvote' ? 'upvotes' : 'downvotes';
 
@@ -80,7 +70,6 @@ export const voteOnPost = async (postId, voteData) => {
         voteResult = updatedVote;
       }
     } else {
-      // 새로운 투표 생성
       const { data: newVote, error: createError } = await supabase
         .from('post_votes')
         .insert([
@@ -95,7 +84,6 @@ export const voteOnPost = async (postId, voteData) => {
 
       if (createError) throw createError;
 
-      // 게시글 투표 수 증가 (안전한 SQL)
       const updateField = vote_type === 'upvote' ? 'upvotes' : 'downvotes';
       await supabase
         .from('community_posts')
@@ -116,7 +104,6 @@ export const voteOnPost = async (postId, voteData) => {
   }
 };
 
-// 2. 게시글 투표 현황 조회 - 새로 추가된 API
 export const getPostVotes = async (postId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -129,7 +116,6 @@ export const getPostVotes = async (postId) => {
       };
     }
 
-    // 게시글 투표 수 조회
     const { data: post, error: postError } = await supabase
       .from('community_posts')
       .select('upvotes, downvotes')
@@ -138,7 +124,6 @@ export const getPostVotes = async (postId) => {
 
     if (postError) throw postError;
 
-    // 사용자의 투표 확인
     const { data: userVote, error: voteError } = await supabase
       .from('post_votes')
       .select('vote_type')
@@ -164,7 +149,6 @@ export const getPostVotes = async (postId) => {
   }
 };
 
-// 3. 사용자의 게시글 투표 상태 확인 (기존 함수 유지)
 export const getUserVote = async (postId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -9,7 +9,6 @@ import {
   createSuccessResponse 
 } from './authUtils';
 
-// 1. 게시글 상세 조회 (댓글 포함)
 export const getPostDetails = async (postId) => {
   try {
     const { data: post, error: postError } = await supabase
@@ -84,7 +83,7 @@ export const getPostDetails = async (postId) => {
 
     return {
       res_code: 200,
-      res_msg: '게시글 상세 조회 성공',
+      res_msg: 'Post details retrieved successfully',
       post: transformedPost
     };
   } catch (error) {
@@ -96,7 +95,6 @@ export const getPostDetails = async (postId) => {
   }
 };
 
-// 2. 게시글 생성
 export const createPost = async (postData) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -105,13 +103,12 @@ export const createPost = async (postData) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
     const { community_id, title, content, media } = postData;
 
-    // 게시글 생성
     const { data: newPost, error: postError } = await supabase
       .from('community_posts')
       .insert([
@@ -130,7 +127,6 @@ export const createPost = async (postData) => {
 
     if (postError) throw postError;
 
-    // 미디어 저장
     if (media && media.length > 0) {
       const mediaData = media.map(item => ({
         post_id: newPost.id,
@@ -146,7 +142,6 @@ export const createPost = async (postData) => {
       if (mediaError) throw mediaError;
     }
 
-    // 커뮤니티의 post_count 증가
     await supabase
       .from('communities')
       .update({
@@ -156,7 +151,7 @@ export const createPost = async (postData) => {
 
     return {
       res_code: 201,
-      res_msg: '게시글이 성공적으로 생성되었습니다',
+      res_msg: 'Post created successfully',
       post: {
         id: newPost.id,
         title: newPost.title,
@@ -175,7 +170,6 @@ export const createPost = async (postData) => {
   }
 };
 
-// 3. 게시글 수정
 export const updatePost = async (postId, updates) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -184,11 +178,10 @@ export const updatePost = async (postId, updates) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 작성자 권한 확인
     const { data: post, error: postError } = await supabase
       .from('community_posts')
       .select('author_id')
@@ -200,7 +193,7 @@ export const updatePost = async (postId, updates) => {
     if (post.author_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '게시글을 수정할 권한이 없습니다'
+        res_msg: 'No permission to modify this post'
       };
     }
 
@@ -218,7 +211,7 @@ export const updatePost = async (postId, updates) => {
 
     return {
       res_code: 200,
-      res_msg: '게시글이 성공적으로 수정되었습니다',
+      res_msg: 'Post updated successfully',
       post: {
         id: updatedPost.id,
         title: updatedPost.title,
@@ -235,7 +228,6 @@ export const updatePost = async (postId, updates) => {
   }
 };
 
-// 4. 게시글 삭제
 export const deletePost = async (postId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -244,11 +236,10 @@ export const deletePost = async (postId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 작성자 권한 확인
     const { data: post, error: postError } = await supabase
       .from('community_posts')
       .select('author_id, community_id')
@@ -260,11 +251,10 @@ export const deletePost = async (postId) => {
     if (post.author_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '게시글을 삭제할 권한이 없습니다'
+        res_msg: 'No permission to delete this post'
       };
     }
 
-    // 관련 데이터 삭제
     await supabase
       .from('comments')
       .delete()
@@ -280,15 +270,13 @@ export const deletePost = async (postId) => {
       .delete()
       .eq('post_id', postId);
 
-    // 게시글 삭제
     const { error: deleteError } = await supabase
       .from('community_posts')
       .delete()
       .eq('id', postId);
 
     if (deleteError) throw deleteError;
-
-    // 커뮤니티의 post_count 감소
+    
     await supabase
       .from('communities')
       .update({
@@ -298,7 +286,7 @@ export const deletePost = async (postId) => {
 
     return {
       res_code: 200,
-      res_msg: '게시글이 성공적으로 삭제되었습니다'
+      res_msg: 'Post deleted successfully'
     };
   } catch (error) {
     return {

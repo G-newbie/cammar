@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 위시리스트에 아이템 추가
 export const addToWishlist = async (itemId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -13,7 +12,6 @@ export const addToWishlist = async (itemId) => {
       };
     }
 
-    // 중복 체크
     const { data: existingWishlist, error: checkError } = await supabase
       .from('wishlists')
       .select('id')
@@ -28,7 +26,6 @@ export const addToWishlist = async (itemId) => {
       };
     }
 
-    // 위시리스트에 추가
     const { data: newWishlist, error: wishlistError } = await supabase
       .from('wishlists')
       .insert([
@@ -56,7 +53,6 @@ export const addToWishlist = async (itemId) => {
   }
 };
 
-// 2. 위시리스트에서 아이템 제거
 export const removeFromWishlist = async (itemId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -90,7 +86,6 @@ export const removeFromWishlist = async (itemId) => {
   }
 };
 
-// 3. 사용자 위시리스트 조회
 export const getUserWishlist = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -149,7 +144,6 @@ export const getUserWishlist = async () => {
   }
 };
 
-// 4. 위시리스트에 아이템이 있는지 확인
 export const isItemInWishlist = async (itemId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();

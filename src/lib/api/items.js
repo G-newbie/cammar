@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 아이템 목록 조회 - SQL 호환
 export const getItems = async (filters = {}) => {
   try {
     const {
@@ -39,17 +38,14 @@ export const getItems = async (filters = {}) => {
         )
       `);
 
-    // 카테고리 필터
     if (category) {
       query = query.eq('category_id', category);
     }
 
-    // 검색 필터
     if (search) {
       query = query.or(`title.ilike.%${search}%, description.ilike.%${search}%`);
     }
 
-    // 가격 필터
     if (price_min) {
       query = query.gte('price', price_min);
     }
@@ -57,14 +53,12 @@ export const getItems = async (filters = {}) => {
       query = query.lte('price', price_max);
     }
 
-    // 정렬
     const sortField = sort === 'oldest' ? 'created_at' : 
                      sort === 'price_asc' ? 'price' : 
                      sort === 'price_desc' ? 'price' : 'created_at';
     const ascending = sort === 'oldest' || sort === 'price_asc';
     query = query.order(sortField, { ascending });
 
-    // 페이지네이션
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     query = query.range(from, to);
@@ -73,7 +67,6 @@ export const getItems = async (filters = {}) => {
 
     if (itemsError) throw itemsError;
 
-    // 응답 데이터 변환 (스프레드시트 형식에 맞춤)
     const transformedItems = items.map(item => ({
       id: item.id,
       title: item.title,
@@ -83,7 +76,7 @@ export const getItems = async (filters = {}) => {
       category_id: item.category_id,
       seller: {
         id: item.seller_id,
-        display_name: item.users?.display_name || '판매자',
+        display_name: item.users?.display_name || 'Seller',
         trust_score: item.users?.trust_score || 0.0
       },
       images: item.item_images ? item.item_images.map(img => ({
@@ -97,7 +90,7 @@ export const getItems = async (filters = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '아이템 목록 조회 성공',
+      res_msg: 'Items list retrieved successfully',
       items: transformedItems,
       pagination: {
         current_page: page,
@@ -125,7 +118,6 @@ export const getItems = async (filters = {}) => {
   }
 };
 
-// 2. 최신 아이템 목록 (홈페이지용)
 export const getLatestItems = async (limit = 20) => {
   try {
     const { data: items, error: itemsError } = await supabase
@@ -149,7 +141,7 @@ export const getLatestItems = async (limit = 20) => {
       title: item.title,
       price: item.price,
       seller: {
-        display_name: '판매자' // TODO: 실제 판매자 정보 연결 필요
+        display_name: 'Seller' 
       },
       images: item.item_images ? item.item_images.map(img => ({
         url: img.url
@@ -159,7 +151,7 @@ export const getLatestItems = async (limit = 20) => {
 
     return {
       res_code: 200,
-      res_msg: '최신 아이템 조회 성공',
+      res_msg: 'Latest items retrieved successfully',
       items: transformedItems,
       meta: {
         sort: 'newest',
@@ -175,7 +167,6 @@ export const getLatestItems = async (limit = 20) => {
   }
 };
 
-// 3. 아이템 상세 조회
 export const getItemDetails = async (itemId) => {
   try {
     const { data: item, error: itemError } = await supabase
@@ -209,7 +200,6 @@ export const getItemDetails = async (itemId) => {
 
     if (itemError) throw itemError;
 
-    // 조회수 증가 (현재 스키마에 view_count 컬럼이 없으므로 생략)
 
     const transformedItem = {
       id: item.id,
@@ -220,7 +210,7 @@ export const getItemDetails = async (itemId) => {
       category_id: item.category_id,
       seller: {
         id: item.seller_id,
-        display_name: item.users?.display_name || '판매자',
+        display_name: item.users?.display_name || 'Seller',
         trust_score: item.users?.trust_score || 0.0,
         total_reviews: item.users?.total_reviews || 0
       },
@@ -233,7 +223,7 @@ export const getItemDetails = async (itemId) => {
 
     return {
       res_code: 200,
-      res_msg: '아이템 상세 조회 성공',
+      res_msg: 'Item details retrieved successfully',
       item: transformedItem
     };
   } catch (error) {
@@ -245,7 +235,6 @@ export const getItemDetails = async (itemId) => {
   }
 };
 
-// 4. 아이템 생성
 export const createItem = async (itemData) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -254,13 +243,12 @@ export const createItem = async (itemData) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
     const { title, description, price, category_id, images } = itemData;
 
-    // 아이템 생성
     const { data: newItem, error: itemError } = await supabase
       .from('items')
       .insert([
@@ -277,7 +265,6 @@ export const createItem = async (itemData) => {
 
     if (itemError) throw itemError;
 
-    // 이미지 저장
     if (images && images.length > 0) {
       const imageData = images.map(img => ({
         item_id: newItem.id,
@@ -293,13 +280,13 @@ export const createItem = async (itemData) => {
 
     return {
       res_code: 201,
-      res_msg: '아이템이 성공적으로 생성되었습니다',
+      res_msg: 'Item created successfully',
       item: {
         id: newItem.id,
         title: newItem.title,
         description: newItem.description,
         price: newItem.price,
-        seller_id: user.id, // 실제로는 items 테이블에 seller_id 컬럼이 필요
+        seller_id: user.id, 
         created_at: newItem.created_at
       }
     };
@@ -312,7 +299,6 @@ export const createItem = async (itemData) => {
   }
 };
 
-// 5. 아이템 수정
 export const updateItem = async (itemId, updates) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -321,11 +307,10 @@ export const updateItem = async (itemId, updates) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 판매자 권한 확인
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('seller_id')
@@ -337,7 +322,7 @@ export const updateItem = async (itemId, updates) => {
     if (item.seller_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '아이템을 수정할 권한이 없습니다'
+        res_msg: 'No permission to modify this item'
       };
     }
 
@@ -355,7 +340,7 @@ export const updateItem = async (itemId, updates) => {
 
     return {
       res_code: 200,
-      res_msg: '아이템이 성공적으로 업데이트되었습니다',
+      res_msg: 'Item updated successfully',
       item: {
         id: updatedItem.id,
         title: updatedItem.title,
@@ -373,7 +358,6 @@ export const updateItem = async (itemId, updates) => {
   }
 };
 
-// 6. 아이템 삭제
 export const deleteItem = async (itemId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -382,11 +366,10 @@ export const deleteItem = async (itemId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
-    // 판매자 권한 확인
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('seller_id')
@@ -398,17 +381,15 @@ export const deleteItem = async (itemId) => {
     if (item.seller_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '아이템을 삭제할 권한이 없습니다'
+        res_msg: 'No permission to delete this item'
       };
     }
 
-    // 관련 이미지들 먼저 삭제
     await supabase
       .from('item_images')
       .delete()
       .eq('item_id', itemId);
 
-    // 아이템 삭제
     const { error: deleteError } = await supabase
       .from('items')
       .delete()
@@ -418,7 +399,7 @@ export const deleteItem = async (itemId) => {
 
     return {
       res_code: 200,
-      res_msg: '아이템이 성공적으로 삭제되었습니다'
+      res_msg: 'Item deleted successfully'
     };
   } catch (error) {
     return {
@@ -429,7 +410,6 @@ export const deleteItem = async (itemId) => {
   }
 };
 
-// 7. 아이템 리뷰 조회 - 스프레드시트에 명시된 API
 export const getItemReviews = async (itemId, options = {}) => {
   try {
     const { page = 1, limit = 20, sort = 'newest' } = options;
@@ -470,7 +450,7 @@ export const getItemReviews = async (itemId, options = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '아이템 리뷰 조회 성공',
+      res_msg: 'Item reviews retrieved successfully',
       reviews: transformedReviews,
       pagination: {
         current_page: page,

@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 메시지 목록 조회
 export const getMessages = async (chatRoomId, filters = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -18,7 +17,6 @@ export const getMessages = async (chatRoomId, filters = {}) => {
       limit = 50
     } = filters;
 
-    // 채팅방 접근 권한 확인
     const { data: chatRoom, error: chatRoomError } = await supabase
       .from('chat_rooms')
       .select('buyer_id, seller_id')
@@ -88,7 +86,6 @@ export const getMessages = async (chatRoomId, filters = {}) => {
   }
 };
 
-// 2. 메시지 전송
 export const sendMessage = async (messageData) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -103,7 +100,6 @@ export const sendMessage = async (messageData) => {
 
     const { chat_room_id, content } = messageData;
 
-    // 채팅방 접근 권한 확인
     const { data: chatRoom, error: chatRoomError } = await supabase
       .from('chat_rooms')
       .select('buyer_id, seller_id')
@@ -119,7 +115,6 @@ export const sendMessage = async (messageData) => {
       };
     }
 
-    // 메시지 생성
     const { data: newMessage, error: messageError } = await supabase
       .from('messages')
       .insert([
@@ -135,7 +130,6 @@ export const sendMessage = async (messageData) => {
 
     if (messageError) throw messageError;
 
-    // 채팅방의 last_message 업데이트
     const isBuyer = chatRoom.buyer_id === user.id;
     const updateField = isBuyer ? 'unread_by_seller' : 'unread_by_buyer';
 
@@ -168,7 +162,6 @@ export const sendMessage = async (messageData) => {
   }
 };
 
-// 3. 메시지 읽음 처리
 export const markMessagesAsRead = async (chatRoomId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -181,7 +174,6 @@ export const markMessagesAsRead = async (chatRoomId) => {
       };
     }
 
-    // 채팅방 접근 권한 확인
     const { data: chatRoom, error: chatRoomError } = await supabase
       .from('chat_rooms')
       .select('buyer_id, seller_id')
@@ -197,7 +189,6 @@ export const markMessagesAsRead = async (chatRoomId) => {
       };
     }
 
-    // 해당 채팅방의 읽지 않은 메시지들을 읽음 처리
     await supabase
       .from('messages')
       .update({ is_read: true })
@@ -205,7 +196,7 @@ export const markMessagesAsRead = async (chatRoomId) => {
       .neq('sender_id', user.id)
       .eq('is_read', false);
 
-    // 채팅방의 unread count 초기화
+            
     const isBuyer = chatRoom.buyer_id === user.id;
     const updateField = isBuyer ? 'unread_by_buyer' : 'unread_by_seller';
 

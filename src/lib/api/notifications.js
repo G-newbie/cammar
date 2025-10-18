@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 알림 목록 조회
 export const getNotifications = async (filters = {}) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -38,7 +37,6 @@ export const getNotifications = async (filters = {}) => {
 
     if (notificationsError) throw notificationsError;
 
-    // 읽지 않은 알림 개수 조회
     const { count: unreadCount, error: unreadError } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
@@ -70,7 +68,6 @@ export const getNotifications = async (filters = {}) => {
   }
 };
 
-// 2. 읽지 않은 알림 개수 조회
 export const getUnreadNotificationCount = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -105,7 +102,6 @@ export const getUnreadNotificationCount = async () => {
   }
 };
 
-// 3. 알림 읽음 처리
 export const markNotificationAsRead = async (notificationId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -139,7 +135,6 @@ export const markNotificationAsRead = async (notificationId) => {
   }
 };
 
-// 4. 모든 알림 읽음 처리
 export const markAllNotificationsAsRead = async () => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -173,7 +168,6 @@ export const markAllNotificationsAsRead = async () => {
   }
 };
 
-// 5. 알림 생성 (내부 함수)
 export const createNotification = async (notificationData) => {
   try {
     const { user_id, type, title, content, related_id } = notificationData;
@@ -209,7 +203,6 @@ export const createNotification = async (notificationData) => {
   }
 };
 
-// 6. 알림 삭제
 export const deleteNotification = async (notificationId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();

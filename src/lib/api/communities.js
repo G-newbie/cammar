@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 커뮤니티 목록 조회
 export const getCommunities = async () => {
   try {
     const { data: communities, error: communitiesError } = await supabase
@@ -48,7 +47,6 @@ export const getCommunities = async () => {
   }
 };
 
-// 2. 커뮤니티 생성
 export const createCommunity = async (communityData) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -70,7 +68,7 @@ export const createCommunity = async (communityData) => {
           name,
           description,
           creator_id: user.id,
-          member_count: 1, // 생성자가 첫 번째 멤버
+          member_count: 1, 
           post_count: 0
         }
       ])
@@ -93,7 +91,6 @@ export const createCommunity = async (communityData) => {
   }
 };
 
-// 3. 커뮤니티 게시글 목록 조회
 export const getCommunityPosts = async (communityId, filters = {}) => {
   try {
     const {
@@ -175,7 +172,6 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
   }
 };
 
-// 4. 커뮤니티 가입
 export const joinCommunity = async (communityId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -188,8 +184,6 @@ export const joinCommunity = async (communityId) => {
       };
     }
 
-    // 현재 스키마에는 community_members 테이블이 없으므로
-    // member_count만 증가시키는 것으로 임시 구현
     const { error: updateError } = await supabase
       .from('communities')
       .update({
@@ -212,7 +206,6 @@ export const joinCommunity = async (communityId) => {
   }
 };
 
-// 5. 커뮤니티 탈퇴
 export const leaveCommunity = async (communityId) => {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -225,8 +218,6 @@ export const leaveCommunity = async (communityId) => {
       };
     }
 
-    // 현재 스키마에는 community_members 테이블이 없으므로
-    // member_count만 감소시키는 것으로 임시 구현
     const { error: updateError } = await supabase
       .from('communities')
       .update({

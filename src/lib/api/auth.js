@@ -1,9 +1,7 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 사용자 등록
 export const signUp = async (email, password, displayName) => {
   try {
-    // 1단계: Supabase Auth에 사용자 생성
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -16,7 +14,6 @@ export const signUp = async (email, password, displayName) => {
 
     if (authError) throw authError;
 
-    // 2단계: public.users 테이블에 프로필 정보 저장
     if (authData.user) {
       const { data: profileData, error: profileError } = await supabase
         .from('users')
@@ -37,7 +34,7 @@ export const signUp = async (email, password, displayName) => {
 
       return {
         res_code: 200,
-        res_msg: '회원가입이 완료되었습니다',
+        res_msg: 'User registration completed successfully',
         user: profileData,
         session: authData.session
       };
@@ -51,7 +48,6 @@ export const signUp = async (email, password, displayName) => {
   }
 };
 
-// 2. 사용자 로그인
 export const signIn = async (email, password) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -60,8 +56,6 @@ export const signIn = async (email, password) => {
     });
 
     if (error) throw error;
-
-    // 사용자 프로필 정보 가져오기
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('*')
@@ -72,7 +66,7 @@ export const signIn = async (email, password) => {
 
     return {
       res_code: 200,
-      res_msg: '로그인 성공',
+      res_msg: 'Login successful',
       user: userProfile,
       session: {
         access_token: data.session.access_token,
@@ -88,7 +82,6 @@ export const signIn = async (email, password) => {
   }
 };
 
-// 3. Google 로그인
 export const signInWithGoogle = async () => {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -102,7 +95,7 @@ export const signInWithGoogle = async () => {
 
     return {
       res_code: 200,
-      res_msg: 'Google 로그인 리다이렉트',
+      res_msg: 'Google login redirect',
       data: data
     };
   } catch (error) {
@@ -114,7 +107,6 @@ export const signInWithGoogle = async () => {
   }
 };
 
-// 4. 이메일 도메인 검증
 export const validateEmailDomain = async (email) => {
   const allowedDomains = ['sunykorea.ac.kr', 'stonybrook.edu'];
   const domain = email.split('@')[1];
@@ -123,14 +115,13 @@ export const validateEmailDomain = async (email) => {
 
   return {
     res_code: 200,
-    res_msg: isValid ? '유효한 대학교 이메일입니다' : '허용되지 않는 이메일 도메인입니다',
+    res_msg: isValid ? 'Valid university email' : 'Email domain not allowed',
     valid: isValid,
     domain: domain,
     message: isValid ? 'Valid university email domain' : 'Invalid email domain'
   };
 };
 
-// 5. 로그아웃
 export const signOut = async () => {
   try {
     const { error } = await supabase.auth.signOut();
@@ -138,7 +129,7 @@ export const signOut = async () => {
 
     return {
       res_code: 200,
-      res_msg: '로그아웃 성공'
+      res_msg: 'Logout successful'
     };
   } catch (error) {
     return {
@@ -149,7 +140,6 @@ export const signOut = async () => {
   }
 };
 
-// 6. 현재 사용자 정보 가져오기
 export const getCurrentUser = async () => {
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -166,13 +156,13 @@ export const getCurrentUser = async () => {
 
       return {
         res_code: 200,
-        res_msg: '사용자 정보 조회 성공',
+        res_msg: 'User information retrieved successfully',
         user: userProfile
       };
     } else {
       return {
         res_code: 401,
-        res_msg: '로그인되지 않은 사용자입니다'
+        res_msg: 'User not logged in'
       };
     }
   } catch (error) {
