@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseClient';
 
-// 1. 아이템 목록 조회 (페이지네이션 및 필터링)
+// 1. 아이템 목록 조회 - SQL 호환
 export const getItems = async (filters = {}) => {
   try {
     const {
@@ -8,7 +8,9 @@ export const getItems = async (filters = {}) => {
       limit = 20,
       category,
       search,
-      sort = 'created_at'
+      sort = 'newest',
+      price_min,
+      price_max
     } = filters;
 
     let query = supabase
@@ -18,8 +20,10 @@ export const getItems = async (filters = {}) => {
         title,
         description,
         price,
-        created_at,
+        category,
         category_id,
+        seller_id,
+        created_at,
         categories (
           id,
           name
@@ -27,6 +31,11 @@ export const getItems = async (filters = {}) => {
         item_images (
           id,
           url
+        ),
+        users!items_seller_id_fkey (
+          id,
+          display_name,
+          trust_score
         )
       `);
 
@@ -40,8 +49,20 @@ export const getItems = async (filters = {}) => {
       query = query.or(`title.ilike.%${search}%, description.ilike.%${search}%`);
     }
 
+    // 가격 필터
+    if (price_min) {
+      query = query.gte('price', price_min);
+    }
+    if (price_max) {
+      query = query.lte('price', price_max);
+    }
+
     // 정렬
-    query = query.order(sort, { ascending: false });
+    const sortField = sort === 'oldest' ? 'created_at' : 
+                     sort === 'price_asc' ? 'price' : 
+                     sort === 'price_desc' ? 'price' : 'created_at';
+    const ascending = sort === 'oldest' || sort === 'price_asc';
+    query = query.order(sortField, { ascending });
 
     // 페이지네이션
     const from = (page - 1) * limit;
@@ -52,29 +73,24 @@ export const getItems = async (filters = {}) => {
 
     if (itemsError) throw itemsError;
 
-    // 응답 데이터 변환 (API 문서 형식에 맞춤)
+    // 응답 데이터 변환 (스프레드시트 형식에 맞춤)
     const transformedItems = items.map(item => ({
       id: item.id,
       title: item.title,
       description: item.description,
       price: item.price,
-      status: 'active', // 현재 스키마에 status 컬럼이 없으므로 기본값
-      view_count: 0, // 현재 스키마에 없으므로 기본값
-      wishlist_count: 0, // 현재 스키마에 없으므로 기본값
+      category: item.category || item.categories?.name || null,
+      category_id: item.category_id,
       seller: {
-        id: item.id, // 임시값 (실제로는 seller_id 컬럼이 필요)
-        display_name: '판매자', // 임시값
-        trust_score: 0.0 // 임시값
+        id: item.seller_id,
+        display_name: item.users?.display_name || '판매자',
+        trust_score: item.users?.trust_score || 0.0
       },
-      category: item.categories ? {
-        id: item.categories.id,
-        name: item.categories.name
-      } : null,
       images: item.item_images ? item.item_images.map(img => ({
         id: img.id,
-        image_url: img.url,
-        display_order: 1 // 현재 스키마에 없으므로 기본값
-      })) : []
+        url: img.url
+      })) : [],
+      created_at: item.created_at
     }));
 
     const totalPages = Math.ceil(count / limit);
@@ -86,8 +102,18 @@ export const getItems = async (filters = {}) => {
       pagination: {
         current_page: page,
         total_pages: totalPages,
-        total_items: count,
-        has_next: page < totalPages
+        total_count: count,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      },
+      meta: {
+        sort: sort,
+        filters: {
+          category: category,
+          search: search,
+          price_min: price_min,
+          price_max: price_max
+        }
       }
     };
   } catch (error) {
@@ -123,17 +149,22 @@ export const getLatestItems = async (limit = 20) => {
       title: item.title,
       price: item.price,
       seller: {
-        display_name: '판매자' // 임시값
+        display_name: '판매자' // TODO: 실제 판매자 정보 연결 필요
       },
       images: item.item_images ? item.item_images.map(img => ({
-        image_url: img.url
-      })) : []
+        url: img.url
+      })) : [],
+      created_at: item.created_at
     }));
 
     return {
       res_code: 200,
       res_msg: '최신 아이템 조회 성공',
-      items: transformedItems
+      items: transformedItems,
+      meta: {
+        sort: 'newest',
+        filters: {}
+      }
     };
   } catch (error) {
     return {
@@ -154,6 +185,7 @@ export const getItemDetails = async (itemId) => {
         title,
         description,
         price,
+        seller_id,
         created_at,
         category_id,
         categories (
@@ -164,6 +196,12 @@ export const getItemDetails = async (itemId) => {
         item_images (
           id,
           url
+        ),
+        users!items_seller_id_fkey (
+          id,
+          display_name,
+          trust_score,
+          total_reviews
         )
       `)
       .eq('id', itemId)
@@ -178,27 +216,19 @@ export const getItemDetails = async (itemId) => {
       title: item.title,
       description: item.description,
       price: item.price,
-      status: 'active', // 기본값
-      view_count: 0, // 기본값
-      wishlist_count: 0, // 기본값
+      category: item.categories?.name || null,
+      category_id: item.category_id,
       seller: {
-        id: item.id, // 임시값
-        display_name: '판매자', // 임시값
-        trust_score: 0.0, // 임시값
-        total_reviews: 0 // 임시값
+        id: item.seller_id,
+        display_name: item.users?.display_name || '판매자',
+        trust_score: item.users?.trust_score || 0.0,
+        total_reviews: item.users?.total_reviews || 0
       },
-      category: item.categories ? {
-        id: item.categories.id,
-        name: item.categories.name,
-        description: item.categories.description
-      } : null,
       images: item.item_images ? item.item_images.map(img => ({
         id: img.id,
-        image_url: img.url,
-        display_order: 1 // 기본값
+        url: img.url
       })) : [],
-      created_at: item.created_at,
-      updated_at: item.created_at // 임시로 created_at 사용
+      created_at: item.created_at
     };
 
     return {
@@ -238,7 +268,8 @@ export const createItem = async (itemData) => {
           title,
           description,
           price,
-          category_id
+          category_id,
+          seller_id: user.id
         }
       ])
       .select()
@@ -294,7 +325,22 @@ export const updateItem = async (itemId, updates) => {
       };
     }
 
-    // 현재 스키마에 seller_id가 없으므로 임시로 권한 체크 생략
+    // 판매자 권한 확인
+    const { data: item, error: itemError } = await supabase
+      .from('items')
+      .select('seller_id')
+      .eq('id', itemId)
+      .single();
+
+    if (itemError) throw itemError;
+
+    if (item.seller_id !== user.id) {
+      return {
+        res_code: 403,
+        res_msg: '아이템을 수정할 권한이 없습니다'
+      };
+    }
+
     const { data: updatedItem, error: updateError } = await supabase
       .from('items')
       .update({
@@ -340,6 +386,22 @@ export const deleteItem = async (itemId) => {
       };
     }
 
+    // 판매자 권한 확인
+    const { data: item, error: itemError } = await supabase
+      .from('items')
+      .select('seller_id')
+      .eq('id', itemId)
+      .single();
+
+    if (itemError) throw itemError;
+
+    if (item.seller_id !== user.id) {
+      return {
+        res_code: 403,
+        res_msg: '아이템을 삭제할 권한이 없습니다'
+      };
+    }
+
     // 관련 이미지들 먼저 삭제
     await supabase
       .from('item_images')
@@ -367,27 +429,59 @@ export const deleteItem = async (itemId) => {
   }
 };
 
-// 7. 아이템 상태 업데이트
-export const updateItemStatus = async (itemId, status) => {
+// 7. 아이템 리뷰 조회 - 스프레드시트에 명시된 API
+export const getItemReviews = async (itemId, options = {}) => {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) throw authError;
+    const { page = 1, limit = 20, sort = 'newest' } = options;
+    const offset = (page - 1) * limit;
 
-    if (!user) {
-      return {
-        res_code: 401,
-        res_msg: '인증이 필요합니다'
-      };
-    }
+    const { data: reviews, error: reviewsError, count } = await supabase
+      .from('reviews')
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        users!reviews_reviewer_id_fkey (
+          id,
+          display_name,
+          profile_image_url
+        )
+      `)
+      .eq('item_id', itemId)
+      .order('created_at', { ascending: sort === 'oldest' })
+      .range(offset, offset + limit - 1);
 
-    // 현재 스키마에 status 컬럼이 없으므로 임시로 구현
+    if (reviewsError) throw reviewsError;
+
+    const transformedReviews = reviews.map(review => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      created_at: review.created_at,
+      reviewer: {
+        id: review.users.id,
+        display_name: review.users.display_name,
+        profile_image_url: review.users.profile_image_url
+      }
+    }));
+
+    const totalPages = Math.ceil(count / limit);
+
     return {
       res_code: 200,
-      res_msg: '아이템 상태가 업데이트되었습니다',
-      item: {
-        id: itemId,
-        status: status,
-        updated_at: new Date().toISOString()
+      res_msg: '아이템 리뷰 조회 성공',
+      reviews: transformedReviews,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_count: count,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      },
+      meta: {
+        sort: sort,
+        filters: {}
       }
     };
   } catch (error) {

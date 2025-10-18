@@ -1,4 +1,13 @@
 import { supabase } from '../supabaseClient';
+import { 
+  getAuthenticatedUser, 
+  checkAuthorPermission, 
+  validateInput, 
+  safeIncrement, 
+  safeDecrement,
+  createErrorResponse, 
+  createSuccessResponse 
+} from './authUtils';
 
 // 1. 게시글 상세 조회 (댓글 포함)
 export const getPostDetails = async (postId) => {

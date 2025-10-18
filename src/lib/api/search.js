@@ -81,10 +81,10 @@ export const searchItems = async (searchParams = {}) => {
       title: item.title,
       price: item.price,
       seller: {
-        display_name: '판매자' // 임시값 (seller_id 컬럼이 없으므로)
+        display_name: '판매자' // TODO: 실제 판매자 정보 연결 필요
       },
       images: item.item_images ? item.item_images.map(img => ({
-        image_url: img.url
+        url: img.url
       })) : []
     }));
 
@@ -97,8 +97,18 @@ export const searchItems = async (searchParams = {}) => {
       pagination: {
         current_page: page,
         total_pages: totalPages,
-        total_items: count,
-        has_next: page < totalPages
+        total_count: count,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      },
+      meta: {
+        sort: sort,
+        filters: {
+          q: q,
+          category: category,
+          min_price: min_price,
+          max_price: max_price
+        }
       }
     };
   } catch (error) {

@@ -1,4 +1,10 @@
 import { supabase } from '../supabaseClient';
+import { 
+  checkAdminPermission, 
+  validateInput, 
+  createErrorResponse, 
+  createSuccessResponse 
+} from './authUtils';
 
 // 1. 카테고리 목록 조회
 export const getCategories = async () => {
@@ -27,20 +33,12 @@ export const getCategories = async () => {
 // 2. 카테고리 생성 (관리자용)
 export const createCategory = async (categoryData) => {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) throw authError;
+    // 관리자 권한 확인
+    await checkAdminPermission();
 
-    if (!user) {
-      return {
-        res_code: 401,
-        res_msg: '인증이 필요합니다'
-      };
-    }
-
-    // 관리자 권한 체크 (현재는 모든 인증된 사용자가 카테고리 생성 가능)
-    // 실제로는 관리자 권한 테이블이나 역할 기반 접근 제어 필요
-
-    const { name, description } = categoryData;
+    // 입력 데이터 검증
+    const name = validateInput.text(categoryData.name, 50);
+    const description = validateInput.text(categoryData.description, 200);
 
     const { data: newCategory, error: categoryError } = await supabase
       .from('categories')
@@ -55,17 +53,9 @@ export const createCategory = async (categoryData) => {
 
     if (categoryError) throw categoryError;
 
-    return {
-      res_code: 201,
-      res_msg: '카테고리가 성공적으로 생성되었습니다',
-      category: newCategory
-    };
+    return createSuccessResponse('카테고리가 성공적으로 생성되었습니다', newCategory);
   } catch (error) {
-    return {
-      res_code: 400,
-      res_msg: error.message,
-      error: error
-    };
+    return createErrorResponse(400, error.message, error);
   }
 };
 

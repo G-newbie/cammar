@@ -100,15 +100,13 @@ export const createChatRoom = async (itemId) => {
     // 아이템 정보 조회하여 seller_id 확인
     const { data: item, error: itemError } = await supabase
       .from('items')
-      .select('id')
+      .select('seller_id')
       .eq('id', itemId)
       .single();
 
     if (itemError) throw itemError;
 
-    // 현재 스키마에는 seller_id가 없으므로 임시로 처리
-    // 실제로는 items 테이블에 seller_id 컬럼이 필요
-    const sellerId = 'temp-seller-id'; // 임시값
+    const sellerId = item.seller_id;
 
     // 중복 채팅방 확인
     const { data: existingRoom, error: checkError } = await supabase
