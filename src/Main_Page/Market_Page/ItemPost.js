@@ -159,6 +159,16 @@ function ItemPost() {
         if (tagErr) throw tagErr;
       }
 
+      // ✅ 태그 저장 이후 Embedding 생성
+      await supabase.functions.invoke("item-embed", {
+        body: {
+          item_id: itemId,
+          title,
+          description: desc,
+          tags
+        },
+      });
+      
       alert("게시 완료!");
       setTitle("");
       setDesc("");
