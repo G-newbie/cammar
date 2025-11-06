@@ -6,12 +6,9 @@ function GoogleSignIn() {
         const doSignIn = async () => {
             try {
                 await signInWithGoogle();
-                // Supabase will redirect via OAuth. On failure, fallback to home.
-                setTimeout(() => {
-                    window.location.replace('/home');
-                }, 2000);
+                // Supabase will handle the redirect; do not override it here.
             } catch (e) {
-                window.location.replace('/home');
+                window.location.replace('/signIn');
             }
         };
         doSignIn();

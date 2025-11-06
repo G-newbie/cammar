@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Popup from 'reactjs-popup';
 
 import './Profile.css'
 import profile from './profile.png';
 import Navbar from '../Navbar.js';
-import { getCurrentUser } from '../../lib/api';
+import { getCurrentUser, signOut } from '../../lib/api';
 
 function Profile() {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [logoutLoading, setLogoutLoading] = useState(false);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -31,6 +33,30 @@ function Profile() {
         };
         loadUser();
     }, []);
+
+    const handleLogout = async () => {
+        if (!window.confirm('Are you sure you want to log out?')) {
+            return;
+        }
+
+        setLogoutLoading(true);
+        try {
+            const result = await signOut();
+            if (result.res_code === 200) {
+                // Clear any local state if needed
+                setUser(null);
+                // Redirect to welcome page
+                navigate('/');
+            } else {
+                alert('Logout failed: ' + (result.res_msg || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error('Logout error:', e);
+            alert('Logout error: ' + e.message);
+        } finally {
+            setLogoutLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -68,6 +94,17 @@ function Profile() {
                     <Link to='../profileEdit'>
                         <div className="editBtn">Edit</div>
                     </Link>
+                    <div 
+                        className="editBtn logoutBtn" 
+                        onClick={handleLogout}
+                        style={{ 
+                            marginTop: '10px',
+                            cursor: logoutLoading ? 'not-allowed' : 'pointer',
+                            opacity: logoutLoading ? 0.6 : 1
+                        }}
+                    >
+                        {logoutLoading ? 'Logging out...' : 'Logout'}
+                    </div>
                 </div>
             </div>
             <ul className="nav flex-column optionList">

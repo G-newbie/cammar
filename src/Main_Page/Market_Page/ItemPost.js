@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../Navbar.js";
 import "./ItemPost.css";
 import { supabase } from "../../lib/supabaseClient";
 import { uploadImage, createItem } from "../../lib/api";
 
 function ItemPost() {
-  const [imageUrls, setImageUrls] = useState([]);
+  const navigate = useNavigate();
+  const [imageFiles, setImageFiles] = useState([]); // Store File objects for preview
+  const [imagePreviews, setImagePreviews] = useState([]); // Store preview URLs
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
@@ -65,42 +68,63 @@ function ItemPost() {
     return data;
   }
 
-  /** 🔸 When file is selected */
-  async function onSelectFiles(e) {
-    const picked = Array.from(e.target.files || []).slice(0, 10);
+  /** 🔸 When file is selected - create previews only, don't upload yet */
+  function onSelectFiles(e) {
+    const picked = Array.from(e.target.files || []);
     if (!picked.length) return;
 
-    setLoading(true);
+    // Validate file types before adding
+    const validFiles = [];
+    const invalidFiles = [];
+
+    picked.forEach(file => {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+      
+      if (allowedTypes.includes(file.type) && allowedExtensions.includes(ext)) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      setErrorMsg(`Invalid file types: ${invalidFiles.join(', ')}. Only JPEG, PNG, and WebP are allowed.`);
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Limit to 10 images total
+    const remainingSlots = 10 - imageFiles.length;
+    const filesToAdd = validFiles.slice(0, remainingSlots);
+
+    // Create preview URLs
+    const newPreviews = filesToAdd.map(file => URL.createObjectURL(file));
+    
+    setImageFiles(prev => [...prev, ...filesToAdd]);
+    setImagePreviews(prev => [...prev, ...newPreviews]);
     setErrorMsg("");
 
-    try {
-      const urls = [];
-      for (let f of picked) {
-        const ext = f.name.split(".").pop()?.toLowerCase();
-        if (ext === "jfif" || f.type === "" || f.type === "image/pjpeg") {
-          f = await toJpegBlob(f);
-        }
-        const u = await uploadAndGetPublicUrl(f);
-        urls.push(u);
-      }
-      setImageUrls(urls);
-
-      // Auto-classify using first image
-      try {
-        const res = await classifyImage(urls[0]);
-        setCategory(res?.category || "");
-        setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
-      } catch (err) {
-        console.warn("classify failed", err);
-        setErrorMsg("Image classification failed (upload succeeded)");
-      }
-    } catch (err) {
-      console.error(err);
-      setErrorMsg(err.message || "Upload error");
-    } finally {
-      setLoading(false);
-      e.target.value = "";
+    // Auto-classify using first image (if available)
+    if (filesToAdd.length > 0 && imageFiles.length === 0) {
+      const firstFile = filesToAdd[0];
+      const previewUrl = newPreviews[0];
+      
+      // Note: Classification will happen after upload, but we can try with preview
+      // For now, we'll skip classification until upload
     }
+
+    e.target.value = "";
+  }
+
+  /** 🔸 Remove image from preview */
+  function removeImage(index) {
+    // Revoke the object URL to free memory
+    URL.revokeObjectURL(imagePreviews[index]);
+    
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   }
 
   /** 🔸 Create post */
@@ -115,8 +139,38 @@ function ItemPost() {
           ? Number(String(price).replace(/[^0-9.]/g, ""))
           : null;
 
+      // Upload images first
+      const uploadedUrls = [];
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        try {
+          let fileToUpload = file;
+          const ext = file.name.split(".").pop()?.toLowerCase();
+          if (ext === "jfif" || file.type === "" || file.type === "image/pjpeg") {
+            fileToUpload = await toJpegBlob(file);
+          }
+          const url = await uploadAndGetPublicUrl(fileToUpload);
+          uploadedUrls.push(url);
+        } catch (err) {
+          console.error(`Failed to upload image ${i + 1}:`, err);
+          throw new Error(`Failed to upload image ${i + 1}: ${err.message}`);
+        }
+      }
+
+      // Auto-classify using first image if available
+      if (uploadedUrls.length > 0 && !category) {
+        try {
+          const res = await classifyImage(uploadedUrls[0]);
+          setCategory(res?.category || "");
+          setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
+        } catch (err) {
+          console.warn("classify failed", err);
+          // Don't fail the post if classification fails
+        }
+      }
+
       // Prepare images array for API
-      const imagesData = imageUrls.map((url, i) => ({
+      const imagesData = uploadedUrls.map((url, i) => ({
         image_url: url,
         sort_order: i
       }));
@@ -133,16 +187,12 @@ function ItemPost() {
       });
 
       if (itemRes.res_code === 201) {
-        // Save tags separately if tags API exists, or skip for now
-        // Tags would need a separate API call or be included in createItem
+        // Clean up preview URLs
+        imagePreviews.forEach(url => URL.revokeObjectURL(url));
         
         alert("Post created!");
-        setTitle("");
-        setDesc("");
-        setPrice("");
-        setCategory("");
-        setTags([]);
-        setImageUrls([]);
+        // Redirect to home page
+        navigate('/home');
       } else {
         throw new Error(itemRes.res_msg || "Failed to create item");
       }
@@ -165,18 +215,53 @@ function ItemPost() {
             <label className="image-upload-area">
               <input
                 type="file"
-                accept="image/*,.jfif,.jpg,.jpeg,.png"
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                 multiple
                 hidden
                 onChange={onSelectFiles}
+                disabled={imageFiles.length >= 10}
               />
               <div className="upload-icon">+</div>
-              <p className="upload-text">Select to insert images (up to 10)</p>
+              <p className="upload-text">
+                Select to insert images (up to 10) - {imageFiles.length}/10 selected
+              </p>
             </label>
-            {imageUrls.length > 0 && (
+            {imagePreviews.length > 0 && (
               <div className="preview-grid">
-                {imageUrls.map((u) => (
-                  <img key={u} src={u} className="preview-thumb" alt="preview" />
+                {imagePreviews.map((previewUrl, index) => (
+                  <div key={index} className="preview-item-wrapper" style={{ position: 'relative' }}>
+                    <img 
+                      src={previewUrl} 
+                      className="preview-thumb" 
+                      alt={`preview ${index + 1}`} 
+                    />
+                    <button
+                      type="button"
+                      className="preview-remove-btn"
+                      onClick={() => removeImage(index)}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        background: 'rgba(220, 53, 69, 0.9)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        lineHeight: '1',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold'
+                      }}
+                      title="Remove image"
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

@@ -1,11 +1,36 @@
 
-export * from './auth';
+export { 
+  signUp,
+  signIn,
+  signInWithGoogle,
+  validateEmailDomain,
+  signOut
+} from './auth';
 
 
-export * from './users';
+export {
+  getCurrentUser,
+  getUserProfile,
+  updateUserProfile,
+  getOtherUserProfile,
+  getUserPosts,
+  getUserItems,
+  getUserWishlists,
+  getUserReviews,
+  getUserPurchases,
+  getUserSales
+} from './users';
 
 
-export * from './items';
+export {
+  getItems,
+  getLatestItems,
+  getItemDetails,
+  createItem,
+  updateItem,
+  deleteItem,
+  getItemReviews
+} from './items';
 
 export * from './wishlists';
 
@@ -25,11 +50,19 @@ export * from './search';
 
 export * from './categories';
 
-export * from './reviews';
+export {
+  createReview,
+  getReviewStats
+} from './reviews';
 
 export * from './notifications';
 
-export * from './upload';
+export {
+  uploadImage,
+  uploadMultipleImages,
+  deleteImage,
+  getUserImages
+} from './upload';
 
 export const createApiResponse = (success, data = null, message = '', error = null) => {
   return {

@@ -20,6 +20,7 @@ function Item() {
     const [reviewRating, setReviewRating] = useState(5);
     const [reviewComment, setReviewComment] = useState('');
     const [reviewLoading, setReviewLoading] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
     useEffect(() => {
         const loadItem = async () => {
@@ -35,6 +36,7 @@ function Item() {
                 const res = await getItemDetails(id);
                 if (res.res_code === 200) {
                     setItem(res.item);
+                    setSelectedImageIndex(0); // Reset to first image when item loads
                 } else {
                     setError(res.res_msg || 'Failed to load item');
                 }
@@ -195,11 +197,38 @@ function Item() {
             <div className="item-description-container">
                 {/* Image Section */}
                 <div className="item-image-section">
-                    <img 
-                        src={(item.images && item.images[0] && item.images[0].url) || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image'} 
-                        alt={item.title} 
-                        className="item-main-image" 
-                    />
+                    {item.images && item.images.length > 0 ? (
+                        <>
+                            {/* Main Image */}
+                            <div className="item-main-image-container">
+                                <img 
+                                    src={item.images[selectedImageIndex]?.url || item.images[0]?.url} 
+                                    alt={item.title} 
+                                    className="item-main-image" 
+                                />
+                            </div>
+                            {/* Thumbnail Gallery */}
+                            {item.images.length > 1 && (
+                                <div className="item-image-thumbnails">
+                                    {item.images.map((img, index) => (
+                                        <img
+                                            key={index}
+                                            src={img.url}
+                                            alt={`${item.title} - Image ${index + 1}`}
+                                            className={`item-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
+                                            onClick={() => setSelectedImageIndex(index)}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <img 
+                            src="https://via.placeholder.com/300x300/cccccc/666666?text=No+Image" 
+                            alt={item.title} 
+                            className="item-main-image" 
+                        />
+                    )}
                 </div>
                 
                 {/* Main Content Grid */}

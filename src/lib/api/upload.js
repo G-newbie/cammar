@@ -12,11 +12,15 @@ export const uploadImage = async (file, bucketName = 'images') => {
       };
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    
+    // Check both MIME type and file extension for security
+    if (!allowedTypes.includes(file.type) || !allowedExtensions.includes(fileExt)) {
       return {
         res_code: 400,
-        res_msg: 'Unsupported file type. Allowed: JPEG, PNG, GIF, WebP'
+        res_msg: 'Unsupported file type. Allowed: JPEG, PNG, WebP only. GIF files are not allowed for security reasons.'
       };
     }
 
@@ -29,7 +33,7 @@ export const uploadImage = async (file, bucketName = 'images') => {
       };
     }
 
-    const fileExt = file.name.split('.').pop();
+    // fileExt is already declared above, reuse it
     const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketName)

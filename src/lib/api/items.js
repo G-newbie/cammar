@@ -1,5 +1,17 @@
 import { supabase } from '../supabaseClient';
 
+const toPublicImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  try {
+    // Our app uploads to the 'items' bucket from ItemPost
+    const { data } = supabase.storage.from('items').getPublicUrl(url);
+    return data?.publicUrl || url;
+  } catch {
+    return url;
+  }
+};
+
 export const getItems = async (filters = {}) => {
   try {
     const {
@@ -81,7 +93,7 @@ export const getItems = async (filters = {}) => {
       },
       images: item.item_images ? item.item_images.map(img => ({
         id: img.id,
-        url: img.url
+        url: toPublicImageUrl(img.url)
       })) : [],
       created_at: item.created_at
     }));
@@ -216,7 +228,7 @@ export const getItemDetails = async (itemId) => {
       },
       images: item.item_images ? item.item_images.map(img => ({
         id: img.id,
-        url: img.url
+        url: toPublicImageUrl(img.url)
       })) : [],
       created_at: item.created_at
     };
@@ -266,16 +278,20 @@ export const createItem = async (itemData) => {
     if (itemError) throw itemError;
 
     if (images && images.length > 0) {
-      const imageData = images.map(img => ({
+      const imageData = images.map((img, index) => ({
         item_id: newItem.id,
-        url: img.image_url
+        url: img.image_url || img.url,
+        sort_order: img.sort_order !== undefined ? img.sort_order : index
       }));
 
       const { error: imagesError } = await supabase
         .from('item_images')
         .insert(imageData);
 
-      if (imagesError) throw imagesError;
+      if (imagesError) {
+        console.error('Error inserting item images:', imagesError);
+        throw imagesError;
+      }
     }
 
     return {
