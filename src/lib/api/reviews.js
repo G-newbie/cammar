@@ -8,7 +8,7 @@ export const createReview = async (reviewData) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -17,7 +17,7 @@ export const createReview = async (reviewData) => {
     if (reviewee_id === user.id) {
       return {
         res_code: 400,
-        res_msg: '본인에게는 리뷰를 남길 수 없습니다'
+        res_msg: 'You cannot leave a review for yourself'
       };
     }
 
@@ -32,7 +32,7 @@ export const createReview = async (reviewData) => {
     if (existingReview) {
       return {
         res_code: 409,
-        res_msg: '이미 해당 아이템에 대한 리뷰를 작성했습니다'
+        res_msg: 'You have already reviewed this item'
       };
     }
 
@@ -78,7 +78,7 @@ export const createReview = async (reviewData) => {
 
     return {
       res_code: 201,
-      res_msg: '리뷰가 성공적으로 작성되었습니다',
+      res_msg: 'Review created successfully',
       review: newReview
     };
   } catch (error) {
@@ -132,7 +132,7 @@ export const getUserReviews = async (userId) => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 리뷰 조회 성공',
+      res_msg: 'User reviews retrieved successfully',
       reviews: transformedReviews
     };
   } catch (error) {
@@ -178,7 +178,7 @@ export const getItemReviews = async (itemId) => {
 
     return {
       res_code: 200,
-      res_msg: '아이템 리뷰 조회 성공',
+      res_msg: 'Item reviews retrieved successfully',
       reviews: transformedReviews
     };
   } catch (error) {
@@ -202,7 +202,7 @@ export const getReviewStats = async (userId) => {
     if (reviews.length === 0) {
       return {
         res_code: 200,
-        res_msg: '리뷰 통계 조회 성공',
+        res_msg: 'Review stats retrieved successfully',
         stats: {
           total_reviews: 0,
           average_rating: 0,
@@ -227,7 +227,7 @@ export const getReviewStats = async (userId) => {
 
     return {
       res_code: 200,
-      res_msg: '리뷰 통계 조회 성공',
+      res_msg: 'Review stats retrieved successfully',
       stats: {
         total_reviews: totalReviews,
         average_rating: Math.round(averageRating * 10) / 10,
@@ -242,3 +242,5 @@ export const getReviewStats = async (userId) => {
     };
   }
 };
+
+

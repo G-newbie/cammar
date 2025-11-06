@@ -1,45 +1,33 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Market.css';
+import { getLatestItems } from '../../lib/api';
 
 function Market() {
-    // Dummy data for market items
-    const marketItems = [
-        {
-            id: 1,
-            name: "Laptop Stand 13 inch.",
-            price: "40,000 won",
-            seller: "Jane Doe",
-            image: "https://via.placeholder.com/100x100/cccccc/666666?text=Laptop+Stand"
-        },
-        {
-            id: 2,
-            name: "CSE300 Textbook",
-            price: "70,000 won",
-            seller: "Sophia Kim",
-            image: "https://via.placeholder.com/100x100/cccccc/666666?text=CSE300"
-        },
-        {
-            id: 3,
-            name: "Mini Fridge for Dorm",
-            price: "35,900 won",
-            seller: "Bongpal Park",
-            image: "https://via.placeholder.com/100x100/cccccc/666666?text=Mini+Fridge"
-        },
-        {
-            id: 4,
-            name: "Macbook Air 2024",
-            price: "199,000 won",
-            seller: "Gildong Hong",
-            image: "https://via.placeholder.com/100x100/cccccc/666666?text=Macbook"
-        },
-        {
-            id: 5,
-            name: "Google Stake",
-            price: "9,999,999 won",
-            seller: "Geojit Zeol",
-            image: "https://via.placeholder.com/100x100/cccccc/666666?text=Google"
-        }
-    ];
+    const navigate = useNavigate();
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const loadItems = async () => {
+            setLoading(true);
+            setError('');
+            try {
+                const res = await getLatestItems(20);
+                if (res.res_code === 200) {
+                    setItems(res.items || []);
+                } else {
+                    setError(res.res_msg || 'Failed to load items');
+                }
+            } catch (e) {
+                setError('Network error');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadItems();
+    }, []);
 
     return (
         <div className="market-container">
@@ -51,20 +39,36 @@ function Market() {
             
             <div className="divider-line"></div>
             
-            <div className="market-items">
-                {marketItems.map(item => (
-                    <div key={item.id} className="market-item">
-                        <div className="item-image">
-                            <img src={item.image} alt={item.name} />
-                        </div>
-                        <div className="item-info">
-                            <h3 className="item-name">{item.name}</h3>
-                            <p className="item-price">{item.price}</p>
-                            <p className="item-seller">{item.seller}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {loading && <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>}
+            {error && <div style={{ padding: 20, textAlign: 'center', color: 'red' }}>{error}</div>}
+            {!loading && !error && (
+                <div className="market-items">
+                    {items.length === 0 ? (
+                        <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No items available</div>
+                    ) : (
+                        items.map(item => (
+                            <div 
+                                key={item.id} 
+                                className="market-item"
+                                onClick={() => navigate(`/item/${item.id}`)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <div className="item-image">
+                                    <img 
+                                        src={(item.images && item.images[0] && item.images[0].url) || 'https://via.placeholder.com/100x100/cccccc/666666?text=No+Image'} 
+                                        alt={item.title} 
+                                    />
+                                </div>
+                                <div className="item-info">
+                                    <h3 className="item-name">{item.title}</h3>
+                                    <p className="item-price">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
+                                    <p className="item-seller">{item.seller?.display_name || 'Unknown seller'}</p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
             
             <div className="post-button">
                 <Link to='/item-post' className="post-btn">

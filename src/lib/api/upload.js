@@ -8,7 +8,7 @@ export const uploadImage = async (file, bucketName = 'images') => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -16,7 +16,7 @@ export const uploadImage = async (file, bucketName = 'images') => {
     if (!allowedTypes.includes(file.type)) {
       return {
         res_code: 400,
-        res_msg: '지원되지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 허용)'
+        res_msg: 'Unsupported file type. Allowed: JPEG, PNG, GIF, WebP'
       };
     }
 
@@ -25,7 +25,7 @@ export const uploadImage = async (file, bucketName = 'images') => {
     if (file.size > maxSize) {
       return {
         res_code: 400,
-        res_msg: '파일 크기가 너무 큽니다. (최대 5MB)'
+        res_msg: 'File is too large (max 5MB)'
       };
     }
 
@@ -46,7 +46,7 @@ export const uploadImage = async (file, bucketName = 'images') => {
 
     return {
       res_code: 201,
-      res_msg: '이미지가 성공적으로 업로드되었습니다',
+      res_msg: 'Image uploaded successfully',
       image_url: publicUrl,
       file_size: file.size,
       content_type: file.type
@@ -68,21 +68,21 @@ export const uploadMultipleImages = async (files, bucketName = 'images') => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
     if (!files || files.length === 0) {
       return {
         res_code: 400,
-        res_msg: '업로드할 파일이 없습니다'
+        res_msg: 'No files to upload'
       };
     }
 
     if (files.length > 5) {
       return {
         res_code: 400,
-        res_msg: '한 번에 최대 5개의 파일만 업로드할 수 있습니다'
+        res_msg: 'You can upload up to 5 files at once'
       };
     }
 
@@ -110,7 +110,7 @@ export const uploadMultipleImages = async (files, bucketName = 'images') => {
 
     return {
       res_code: 200,
-      res_msg: `${uploadResults.length}개의 파일이 업로드되었습니다`,
+      res_msg: `${uploadResults.length} files uploaded`,
       uploaded_files: uploadResults,
       errors: errors
     };
@@ -131,7 +131,7 @@ export const deleteImage = async (imageUrl, bucketName = 'images') => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -147,7 +147,7 @@ export const deleteImage = async (imageUrl, bucketName = 'images') => {
 
     return {
       res_code: 200,
-      res_msg: '이미지가 성공적으로 삭제되었습니다'
+      res_msg: 'Image deleted successfully'
     };
   } catch (error) {
     return {
@@ -166,7 +166,7 @@ export const getUserImages = async (bucketName = 'images') => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -195,7 +195,7 @@ export const getUserImages = async (bucketName = 'images') => {
 
     return {
       res_code: 200,
-      res_msg: '사용자 이미지 목록 조회 성공',
+      res_msg: 'User images retrieved successfully',
       images: images
     };
   } catch (error) {
@@ -206,3 +206,5 @@ export const getUserImages = async (bucketName = 'images') => {
     };
   }
 };
+
+

@@ -55,7 +55,7 @@ export const searchItems = async (searchParams = {}) => {
         query = query.order('created_at', { ascending: false });
         break;
       case 'popular':
-        // 현재 스키마에 조회수나 인기도 필드가 없으므로 최신순으로 대체
+        // No view count or popularity field in schema, so default to newest
         query = query.order('created_at', { ascending: false });
         break;
       default:

@@ -40,7 +40,7 @@ export const createApiResponse = (success, data = null, message = '', error = nu
   };
 };
 
-export const handleApiError = (error, defaultMessage = '알 수 없는 오류가 발생했습니다') => {
+export const handleApiError = (error, defaultMessage = 'An unknown error occurred') => {
   console.error('API Error:', error);
   
   return createApiResponse(false, null, error.message || defaultMessage, error);

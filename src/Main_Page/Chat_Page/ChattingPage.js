@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import Navbar from '../Navbar.js';
 import ChatList from './ChatList.js';
 import Chatroom from './Chatroom.js';
-import { getChatRooms, getMessages, sendMessage, getCurrentUser } from '../../lib/api';
+import { getChatRooms, getMessages, sendMessage, getCurrentUser, markMessagesAsRead } from '../../lib/api';
 import './ChattingPage.css';
 
 function ChattingPage() {
-    // 더미 채팅 데이터
+    // Dummy chat data
     const chatData = [
         {
             id: 1,
@@ -52,7 +52,7 @@ function ChattingPage() {
         }
     ];
 
-    // 더미 채팅방 메시지 데이터
+    // Dummy chat room message data
     const messages = [
         {
             id: 1,
@@ -96,7 +96,7 @@ function ChattingPage() {
     const [actualMessages, setActualMessages] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
 
-    // 실제 채팅 데이터 로드
+    // Load actual chat data
     useEffect(() => {
         loadCurrentUser();
         loadChatRooms();
@@ -113,7 +113,7 @@ function ChattingPage() {
         }
     };
 
-    // 선택된 채팅방 변경 시 메시지 로드
+    // Load messages when selected chat room changes
     useEffect(() => {
         if (selectedChat && selectedChat.id) {
             loadMessages(selectedChat.id);
@@ -124,27 +124,27 @@ function ChattingPage() {
         try {
             const result = await getChatRooms();
             if (result.res_code === 200) {
-                // API 데이터를 기존 형식으로 변환
+                // Transform API data to existing format
                 const transformedChats = result.chat_rooms.map(chatRoom => ({
                     id: chatRoom.id,
                     name: chatRoom.item ? chatRoom.item.title : 
                           (chatRoom.buyer.display_name || chatRoom.seller.display_name),
-                    lastMessage: chatRoom.last_message || '메시지가 없습니다',
+                    lastMessage: chatRoom.last_message || 'No messages yet',
                     timestamp: formatTimestamp(chatRoom.last_message_at),
                     isActive: false,
-                    // API 데이터를 위해 추가 정보 저장
+                    // Store additional info for API data
                     apiData: chatRoom
                 }));
                 setActualChatData(transformedChats);
                 
-                // 첫 번째 채팅방을 기본 선택
+                // Select first chat room as default
                 if (transformedChats.length > 0) {
                     setSelectedChat(transformedChats[0]);
                 }
             }
         } catch (error) {
             console.error('Error loading chat rooms:', error);
-            // API 실패 시 더미 데이터 사용
+            // Use dummy data on API failure
             setActualChatData(chatData);
         }
     };
@@ -153,19 +153,28 @@ function ChattingPage() {
         try {
             const result = await getMessages(chatRoomId, { page: 1, limit: 50 });
             if (result.res_code === 200) {
-                // API 메시지를 기존 형식으로 변환
+                // Transform API messages to existing format
                 const transformedMessages = result.messages.map(message => ({
                     id: message.id,
                     sender: message.sender.display_name,
                     message: message.content,
                     timestamp: formatMessageTime(message.created_at),
-                    isOwn: message.sender.id === currentUser?.id // 현재 사용자와 비교
+                    isOwn: message.sender.id === currentUser?.id // Compare with current user
                 }));
                 setActualMessages(transformedMessages);
+                
+                // Mark messages as read when loading chat room
+                if (currentUser) {
+                    try {
+                        await markMessagesAsRead(chatRoomId);
+                    } catch (e) {
+                        console.error('Error marking messages as read:', e);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading messages:', error);
-            // API 실패 시 더미 메시지 사용
+            // Use dummy messages on API failure
             setActualMessages(messages);
         }
     };
@@ -173,11 +182,11 @@ function ChattingPage() {
     const formatTimestamp = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
-        return date.toLocaleDateString('ko-KR', {
+        return date.toLocaleDateString('en-US', {
             month: '2-digit',
             day: '2-digit',
             year: 'numeric'
-        }) + ' ' + date.toLocaleTimeString('ko-KR', {
+        }) + ' ' + date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
@@ -187,11 +196,11 @@ function ChattingPage() {
     const formatMessageTime = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
-        return date.toLocaleDateString('ko-KR', {
+        return date.toLocaleDateString('en-US', {
             month: '2-digit',
             day: '2-digit',
             year: 'numeric'
-        }) + ' ' + date.toLocaleTimeString('ko-KR', {
+        }) + ' ' + date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
@@ -208,10 +217,10 @@ function ChattingPage() {
             });
 
             if (result.res_code === 201) {
-                // 새 메시지를 기존 형식으로 변환하여 추가
+                // Transform and add new message in existing format
                 const newMessage = {
                     id: result.message.id,
-                    sender: currentUser?.display_name || '나',
+                    sender: currentUser?.display_name || 'Me',
                     message: result.message.content,
                     timestamp: formatMessageTime(result.message.created_at),
                     isOwn: true
@@ -219,7 +228,7 @@ function ChattingPage() {
                 
                 setActualMessages(prev => [...prev, newMessage]);
                 
-                // 채팅방 목록의 마지막 메시지도 업데이트
+                // Update last message in chat room list
                 setActualChatData(prev => prev.map(chat => 
                     chat.id === selectedChat.id 
                         ? { ...chat, lastMessage: messageContent, timestamp: formatTimestamp(new Date()) }

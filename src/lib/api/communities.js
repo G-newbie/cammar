@@ -35,7 +35,7 @@ export const getCommunities = async () => {
 
     return {
       res_code: 200,
-      res_msg: '커뮤니티 목록 조회 성공',
+      res_msg: 'Communities retrieved successfully',
       communities: transformedCommunities
     };
   } catch (error) {
@@ -55,7 +55,7 @@ export const createCommunity = async (communityData) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -79,7 +79,7 @@ export const createCommunity = async (communityData) => {
 
     return {
       res_code: 201,
-      res_msg: '커뮤니티가 성공적으로 생성되었습니다',
+      res_msg: 'Community created successfully',
       community: newCommunity
     };
   } catch (error) {
@@ -154,7 +154,7 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '커뮤니티 게시글 조회 성공',
+      res_msg: 'Community posts retrieved successfully',
       posts: transformedPosts,
       pagination: {
         current_page: page,
@@ -180,7 +180,7 @@ export const joinCommunity = async (communityId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -195,7 +195,7 @@ export const joinCommunity = async (communityId) => {
 
     return {
       res_code: 200,
-      res_msg: '커뮤니티에 가입되었습니다'
+      res_msg: 'Joined community',
     };
   } catch (error) {
     return {
@@ -214,7 +214,7 @@ export const leaveCommunity = async (communityId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -229,7 +229,7 @@ export const leaveCommunity = async (communityId) => {
 
     return {
       res_code: 200,
-      res_msg: '커뮤니티에서 탈퇴되었습니다'
+      res_msg: 'Left community'
     };
   } catch (error) {
     return {

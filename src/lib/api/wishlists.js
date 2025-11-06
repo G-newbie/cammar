@@ -8,7 +8,7 @@ export const addToWishlist = async (itemId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -22,7 +22,7 @@ export const addToWishlist = async (itemId) => {
     if (existingWishlist) {
       return {
         res_code: 409,
-        res_msg: '이미 위시리스트에 추가된 아이템입니다'
+        res_msg: 'Item is already in your wishlist'
       };
     }
 
@@ -41,7 +41,7 @@ export const addToWishlist = async (itemId) => {
 
     return {
       res_code: 201,
-      res_msg: '위시리스트에 추가되었습니다',
+      res_msg: 'Added to wishlist',
       wishlist: newWishlist
     };
   } catch (error) {
@@ -61,7 +61,7 @@ export const removeFromWishlist = async (itemId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -75,7 +75,7 @@ export const removeFromWishlist = async (itemId) => {
 
     return {
       res_code: 200,
-      res_msg: '위시리스트에서 제거되었습니다'
+      res_msg: 'Removed from wishlist'
     };
   } catch (error) {
     return {
@@ -94,7 +94,7 @@ export const getUserWishlist = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -132,7 +132,7 @@ export const getUserWishlist = async () => {
 
     return {
       res_code: 200,
-      res_msg: '위시리스트 조회 성공',
+      res_msg: 'Wishlist retrieved successfully',
       wishlists: transformedWishlists
     };
   } catch (error) {
@@ -152,7 +152,7 @@ export const isItemInWishlist = async (itemId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -165,14 +165,16 @@ export const isItemInWishlist = async (itemId) => {
 
     return {
       res_code: 200,
-      res_msg: '위시리스트 확인 완료',
+      res_msg: 'Wishlist check complete',
       in_wishlist: !!wishlist
     };
   } catch (error) {
     return {
       res_code: 200,
-      res_msg: '위시리스트 확인 완료',
+      res_msg: 'Wishlist check complete',
       in_wishlist: false
     };
   }
 };
+
+

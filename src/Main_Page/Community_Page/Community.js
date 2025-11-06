@@ -1,39 +1,98 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../Navbar.js'; // Use your existing Navbar component
 import './Community.css';
+import { getCommunities, getCommunityPosts, joinCommunity, leaveCommunity } from '../../lib/api';
 
 function Community() {
   const navigate = useNavigate();
 
-  // Example post data (can be replaced with API data)
-  const posts = [
-    {
-      id: 1,
-      title: 'Someone help me with this assignment?',
-      preview: 'I’m currently doing CSE300...',
-      author: 'Jane Doe',
-      community: 'CSE Lounge',
-      time: '09.15.2025 17:31',
-    },
-    {
-      id: 2,
-      title: 'Anyone playing League right now?',
-      preview: 'Finished my assignment just before and...',
-      author: 'Sophia Kim',
-      community: 'League of Legend',
-      time: '09.15.2025 03:31',
-    },
-    {
-      id: 3,
-      title: 'I’m so burnt out...',
-      preview: 'Mid-semester, my grades are...',
-      author: 'Bongpal Park',
-      community: 'CSE Lounge',
-      time: '09.14.2025 22:19',
-      img: 'https://placekitten.com/200/200',
-    },
-  ];
+  const [communities, setCommunities] = useState([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [joinLeaveLoading, setJoinLeaveLoading] = useState({});
+
+  useEffect(() => {
+    const loadCommunities = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await getCommunities();
+        if (res.res_code === 200) {
+          setCommunities(res.communities || []);
+          if (res.communities && res.communities[0]) {
+            setSelectedCommunityId(res.communities[0].id);
+          }
+        } else {
+          setError(res.res_msg || 'Failed to load communities');
+        }
+      } catch (e) {
+        setError('Network error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCommunities();
+  }, []);
+
+  useEffect(() => {
+    const loadPosts = async () => {
+      if (!selectedCommunityId) return;
+      setLoading(true);
+      setError('');
+      try {
+        const res = await getCommunityPosts(selectedCommunityId, { page: 1, limit: 20 });
+        if (res.res_code === 200) {
+          // API returns full content, so slice for preview
+          const mapped = (res.posts || []).map(p => ({
+            id: p.id,
+            title: p.title,
+            preview: (p.content || '').slice(0, 80),
+            author: p.author?.display_name,
+            community: communities.find(c => c.id === selectedCommunityId)?.name || '',
+            time: new Date(p.created_at).toLocaleString(),
+            img: (p.media && p.media[0] && p.media[0].media_url) || undefined
+          }));
+          setPosts(mapped);
+        } else {
+          setError(res.res_msg || 'Failed to load posts');
+        }
+      } catch (e) {
+        setError('Network error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPosts();
+  }, [selectedCommunityId, communities]);
+
+  const handleJoinLeave = async (communityId, isJoined) => {
+    if (joinLeaveLoading[communityId]) return;
+    setJoinLeaveLoading(prev => ({ ...prev, [communityId]: true }));
+    try {
+      let res;
+      if (isJoined) {
+        res = await leaveCommunity(communityId);
+      } else {
+        res = await joinCommunity(communityId);
+      }
+      if (res.res_code === 200 || res.res_code === 201) {
+        // Reload communities to update join status
+        const communitiesRes = await getCommunities();
+        if (communitiesRes.res_code === 200) {
+          setCommunities(communitiesRes.communities || []);
+        }
+      } else {
+        alert(res.res_msg || `Failed to ${isJoined ? 'leave' : 'join'} community`);
+      }
+    } catch (e) {
+      alert('Network error');
+    } finally {
+      setJoinLeaveLoading(prev => ({ ...prev, [communityId]: false }));
+    }
+  };
 
   return (
     <>
@@ -45,11 +104,37 @@ function Community() {
         <aside className="community-sidebar">
           <div className="sidebar-home">Home</div>
           <div className="sidebar-title">Community List</div>
-          <button className="sidebar-btn active">CSE Lounge</button>
-          <button className="sidebar-btn">League of Legend</button>
-          <button className="sidebar-btn">Singer</button>
-          <button className="sidebar-btn">Triple Street</button>
-          <button className="sidebar-btn">Playboys</button>
+          {communities.map(c => (
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                className={"sidebar-btn" + (c.id === selectedCommunityId ? ' active' : '')}
+                onClick={() => setSelectedCommunityId(c.id)}
+                style={{ flex: 1 }}
+              >
+                {c.name}
+              </button>
+              {c.is_member !== undefined && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleJoinLeave(c.id, c.is_member);
+                  }}
+                  disabled={joinLeaveLoading[c.id]}
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: 12,
+                    backgroundColor: c.is_member ? '#ff4444' : '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: joinLeaveLoading[c.id] ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {joinLeaveLoading[c.id] ? '...' : (c.is_member ? 'Leave' : 'Join')}
+                </button>
+              )}
+            </div>
+          ))}
 
           <button
             className="sidebar-create"
@@ -61,7 +146,9 @@ function Community() {
 
         {/* Main content area with post cards */}
         <main className="community-main">
-          {posts.map((p) => (
+          {loading && <div style={{ padding: 12 }}>Loading...</div>}
+          {(!loading && error) && <div style={{ padding: 12, color: 'red' }}>{error}</div>}
+          {(!loading && !error) && posts.map((p) => (
             <div
               className="post-card"
               key={p.id}

@@ -8,7 +8,7 @@ export const getNotifications = async (filters = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -49,7 +49,7 @@ export const getNotifications = async (filters = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '알림 목록 조회 성공',
+      res_msg: 'Notifications retrieved successfully',
       notifications: notifications,
       unread_count: unreadCount || 0,
       pagination: {
@@ -76,7 +76,7 @@ export const getUnreadNotificationCount = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -90,7 +90,7 @@ export const getUnreadNotificationCount = async () => {
 
     return {
       res_code: 200,
-      res_msg: '읽지 않은 알림 개수 조회 성공',
+      res_msg: 'Unread notification count retrieved successfully',
       unread_count: count || 0
     };
   } catch (error) {
@@ -110,7 +110,7 @@ export const markNotificationAsRead = async (notificationId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -124,7 +124,7 @@ export const markNotificationAsRead = async (notificationId) => {
 
     return {
       res_code: 200,
-      res_msg: '알림이 읽음 처리되었습니다'
+      res_msg: 'Notification marked as read'
     };
   } catch (error) {
     return {
@@ -143,7 +143,7 @@ export const markAllNotificationsAsRead = async () => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -157,7 +157,7 @@ export const markAllNotificationsAsRead = async () => {
 
     return {
       res_code: 200,
-      res_msg: '모든 알림이 읽음 처리되었습니다'
+      res_msg: 'All notifications marked as read'
     };
   } catch (error) {
     return {
@@ -191,7 +191,7 @@ export const createNotification = async (notificationData) => {
 
     return {
       res_code: 201,
-      res_msg: '알림이 생성되었습니다',
+      res_msg: 'Notification created',
       notification: newNotification
     };
   } catch (error) {
@@ -211,7 +211,7 @@ export const deleteNotification = async (notificationId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -225,7 +225,7 @@ export const deleteNotification = async (notificationId) => {
 
     return {
       res_code: 200,
-      res_msg: '알림이 삭제되었습니다'
+      res_msg: 'Notification deleted'
     };
   } catch (error) {
     return {
@@ -235,3 +235,5 @@ export const deleteNotification = async (notificationId) => {
     };
   }
 };
+
+

@@ -7,6 +7,7 @@ import Welcome from './Welcome_Page/Welcome.js';
 import SignIn from './Welcome_Page/SignIn.js';
 import SignUp from './Welcome_Page/SignUp.js';
 import GoogleSignIn from './Welcome_Page/GoogleSignIn.js';
+import AuthCallback from './Welcome_Page/AuthCallback.js';
 
 // Main Content
 import MainContent from './Main_Page/MainContent.js';
@@ -39,6 +40,7 @@ function App() {
         <Route path='/signIn' element={<SignIn />} />
         <Route path='/signUp' element={<SignUp />} />
         <Route path='/googleSignIn' element={<GoogleSignIn />} />
+        <Route path='/auth/callback' element={<AuthCallback />} />
 
         {/* -------- Main Home -------- */}
         <Route path='/home' element={<MainContent />} />
@@ -53,7 +55,7 @@ function App() {
         <Route path='/chat' element={<Chat />} />
         <Route path='/search' element={<Search />} />
         <Route path='/search-result' element={<SearchResult />} />
-        <Route path='/item' element={<Item />} />
+        <Route path='/item/:id' element={<Item />} />
         <Route path='/item-post' element={<ItemPost />} />
         <Route path='/profile' element={<Profile />} />
         <Route path='/profileEdit' element={<ProfileEdit />} />

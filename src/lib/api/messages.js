@@ -8,7 +8,7 @@ export const getMessages = async (chatRoomId, filters = {}) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -28,7 +28,7 @@ export const getMessages = async (chatRoomId, filters = {}) => {
     if (chatRoom.buyer_id !== user.id && chatRoom.seller_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '채팅방에 접근할 권한이 없습니다'
+        res_msg: 'You do not have access to this chat room'
       };
     }
 
@@ -68,7 +68,7 @@ export const getMessages = async (chatRoomId, filters = {}) => {
 
     return {
       res_code: 200,
-      res_msg: '메시지 목록 조회 성공',
+      res_msg: 'Messages retrieved successfully',
       messages: transformedMessages,
       pagination: {
         current_page: page,
@@ -94,7 +94,7 @@ export const sendMessage = async (messageData) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -111,7 +111,7 @@ export const sendMessage = async (messageData) => {
     if (chatRoom.buyer_id !== user.id && chatRoom.seller_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '채팅방에 접근할 권한이 없습니다'
+        res_msg: 'You do not have access to this chat room'
       };
     }
 
@@ -144,7 +144,7 @@ export const sendMessage = async (messageData) => {
 
     return {
       res_code: 201,
-      res_msg: '메시지가 성공적으로 전송되었습니다',
+      res_msg: 'Message sent successfully',
       message: {
         id: newMessage.id,
         content: newMessage.content,
@@ -170,7 +170,7 @@ export const markMessagesAsRead = async (chatRoomId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -185,7 +185,7 @@ export const markMessagesAsRead = async (chatRoomId) => {
     if (chatRoom.buyer_id !== user.id && chatRoom.seller_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: '채팅방에 접근할 권한이 없습니다'
+        res_msg: 'You do not have access to this chat room'
       };
     }
 
@@ -209,7 +209,7 @@ export const markMessagesAsRead = async (chatRoomId) => {
 
     return {
       res_code: 200,
-      res_msg: '메시지가 읽음 처리되었습니다'
+      res_msg: 'Messages marked as read'
     };
   } catch (error) {
     return {

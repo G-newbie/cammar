@@ -18,7 +18,7 @@ export const getCategories = async () => {
 
     return {
       res_code: 200,
-      res_msg: '카테고리 목록 조회 성공',
+      res_msg: 'Categories retrieved successfully',
       categories: categories
     };
   } catch (error) {
@@ -52,7 +52,7 @@ export const createCategory = async (categoryData) => {
 
     if (categoryError) throw categoryError;
 
-    return createSuccessResponse('카테고리가 성공적으로 생성되었습니다', newCategory);
+    return createSuccessResponse('Category created successfully', newCategory);
   } catch (error) {
     return createErrorResponse(400, error.message, error);
   }
@@ -67,7 +67,7 @@ export const updateCategory = async (categoryId, updates) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -83,7 +83,7 @@ export const updateCategory = async (categoryId, updates) => {
 
     return {
       res_code: 200,
-      res_msg: '카테고리가 성공적으로 수정되었습니다',
+      res_msg: 'Category updated successfully',
       category: updatedCategory
     };
   } catch (error) {
@@ -103,7 +103,7 @@ export const deleteCategory = async (categoryId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -119,7 +119,7 @@ export const deleteCategory = async (categoryId) => {
     if (items && items.length > 0) {
       return {
         res_code: 409,
-        res_msg: '해당 카테고리를 사용하는 아이템이 있어 삭제할 수 없습니다'
+        res_msg: 'Cannot delete: items exist in this category'
       };
     }
 
@@ -132,7 +132,7 @@ export const deleteCategory = async (categoryId) => {
 
     return {
       res_code: 200,
-      res_msg: '카테고리가 성공적으로 삭제되었습니다'
+      res_msg: 'Category deleted successfully'
     };
   } catch (error) {
     return {

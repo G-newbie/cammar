@@ -16,7 +16,7 @@ export const voteOnPost = async (postId, voteData) => {
     const { vote_type } = voteData;
 
     if (!['upvote', 'downvote'].includes(vote_type)) {
-      throw new Error('유효하지 않은 투표 타입입니다 (upvote 또는 downvote)');
+      throw new Error('Invalid vote type (must be upvote or downvote)');
     }
 
     const { data: existingVote, error: checkError } = await supabase
@@ -96,7 +96,7 @@ export const voteOnPost = async (postId, voteData) => {
     }
 
     return createSuccessResponse(
-      voteResult ? '투표가 성공적으로 처리되었습니다' : '투표가 취소되었습니다',
+      voteResult ? 'Vote processed successfully' : 'Vote removed',
       voteResult
     );
   } catch (error) {
@@ -112,7 +112,7 @@ export const getPostVotes = async (postId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -133,7 +133,7 @@ export const getPostVotes = async (postId) => {
 
     return {
       res_code: 200,
-      res_msg: '투표 현황 조회 성공',
+      res_msg: 'Vote status retrieved successfully',
       votes: {
         upvotes: post.upvotes,
         downvotes: post.downvotes,
@@ -157,7 +157,7 @@ export const getUserVote = async (postId) => {
     if (!user) {
       return {
         res_code: 401,
-        res_msg: '인증이 필요합니다'
+        res_msg: 'Authentication required'
       };
     }
 
@@ -170,13 +170,13 @@ export const getUserVote = async (postId) => {
 
     return {
       res_code: 200,
-      res_msg: '투표 상태 확인 완료',
+      res_msg: 'Vote check complete',
       vote_type: vote ? vote.vote_type : null
     };
   } catch (error) {
     return {
       res_code: 200,
-      res_msg: '투표 상태 확인 완료',
+      res_msg: 'Vote check complete',
       vote_type: null
     };
   }
