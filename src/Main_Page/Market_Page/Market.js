@@ -1,83 +1,77 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './Market.css';
-import { getLatestItems } from '../../lib/api';
+import { Link, useNavigate } from "react-router-dom";
+import "./Market.css";
 
-function Market() {
-    const navigate = useNavigate();
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+function Market({ items = [], loading, errorMsg }) {
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const loadItems = async () => {
-            setLoading(true);
-            setError('');
-            try {
-                const res = await getLatestItems(20);
-                if (res.res_code === 200) {
-                    setItems(res.items || []);
-                } else {
-                    setError(res.res_msg || 'Failed to load items');
-                }
-            } catch (e) {
-                setError('Network error');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadItems();
-    }, []);
+  if (loading) {
+    return <div className="market-container">Loading items...</div>;
+  }
 
-    return (
-        <div className="market-container">
-            <div className="market-header">
-                <h1 className="market-title">Market</h1>
-            </div>
-            
-            
-            
-            <div className="divider-line"></div>
-            
-            {loading && <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>}
-            {error && <div style={{ padding: 20, textAlign: 'center', color: 'red' }}>{error}</div>}
-            {!loading && !error && (
-                <div className="market-items">
-                    {items.length === 0 ? (
-                        <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No items available</div>
-                    ) : (
-                        items.map(item => (
-                            <div 
-                                key={item.id} 
-                                className="market-item"
-                                onClick={() => navigate(`/item/${item.id}`)}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <div className="item-image">
-                                    <img 
-                                        src={(item.images && item.images[0] && item.images[0].url) || 'https://via.placeholder.com/100x100/cccccc/666666?text=No+Image'} 
-                                        alt={item.title} 
-                                    />
-                                </div>
-                                <div className="item-info">
-                                    <h3 className="item-name">{item.title}</h3>
-                                    <p className="item-price">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
-                                    <p className="item-seller">{item.seller?.display_name || 'Unknown seller'}</p>
-                                </div>
-                            </div>
-                        ))
-                    )}
+  if (errorMsg) {
+    return <div className="market-container error-text">{errorMsg}</div>;
+  }
+
+  return (
+    <div className="market-container">
+      <h2 className="market-title">Latest Items</h2>
+
+      {items.length === 0 ? (
+        <div className="market-empty">No items yet.</div>
+      ) : (
+        <div className="market-grid">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="market-card"
+              onClick={() => navigate(`/item/${item.id}`)}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="market-image-wrapper">
+                <img
+                  src={
+                    item.image_url ||
+                    (item.images && item.images[0] && item.images[0].url) ||
+                    "https://placehold.co/300x200?text=No+Image"
+                  }
+                  alt={item.title}
+                  className="market-image"
+                />
+              </div>
+
+              <div className="market-info">
+                <div className="market-item-title">{item.title}</div>
+                <div className="market-item-price">
+                  {item.price != null ? `${item.price}₩` : ""}
                 </div>
-            )}
-            
-            <div className="post-button">
-                <Link to='/item-post' className="post-btn">
-                    <span className="post-icon">+</span>
-                    <span className="post-text">Post</span>
-                </Link>
+                <div className="market-item-meta">
+                  <span className="market-item-category">
+                    {item.category || "etc"}
+                  </span>
+                  {item.tags && item.tags.length > 0 && (
+                    <div className="market-tags">
+                      {item.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="market-tag-chip">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+          ))}
         </div>
-    );
+      )}
+
+      <div className="post-button">
+        <Link to="/item-post" className="post-btn">
+          <span className="post-icon">+</span>
+          <span className="post-text">Post</span>
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 export default Market;

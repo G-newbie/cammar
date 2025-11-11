@@ -172,29 +172,55 @@ function ItemPost() {
       // Prepare images array for API
       const imagesData = uploadedUrls.map((url, i) => ({
         image_url: url,
-        sort_order: i
+        sort_order: i,
       }));
 
-      // Note: category_id is required by API, but we only have category name string
-      // For now, we'll pass null for category_id and keep category as string if needed
-      // You may need to map category name to category_id using getCategories API later
       const itemRes = await createItem({
         title: title.trim(),
         description: desc?.trim() || null,
         price: cleanPrice,
         category_id: null, // TODO: Map category name to category_id if needed
-        images: imagesData
+        images: imagesData,
       });
 
-      if (itemRes.res_code === 201) {
-        // Clean up preview URLs
-        imagePreviews.forEach(url => URL.revokeObjectURL(url));
-        
-        alert("Post created!");
-        // Redirect to home page
-        navigate('/home');
-      } else {
+      if (itemRes.res_code !== 201) {
         throw new Error(itemRes.res_msg || "Failed to create item");
+      }
+
+      const itemId = itemRes.item?.id;
+
+      if (itemId) {
+        try {
+          await supabase.functions.invoke("item-embed", {
+            body: {
+              item_id: itemId,
+              title: title.trim(),
+              description: desc?.trim() || "",
+              tags,
+            },
+          });
+        } catch (embedErr) {
+          console.warn("Embedding generation failed:", embedErr);
+        }
+      }
+
+      // Clean up preview URLs and reset state
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+
+      alert("Post created!");
+
+      setTitle("");
+      setDesc("");
+      setPrice("");
+      setCategory("");
+      setTags([]);
+      setImageFiles([]);
+      setImagePreviews([]);
+
+      if (itemId) {
+        navigate(`/item/${itemId}`);
+      } else {
+        navigate("/home");
       }
     } catch (err) {
       console.error(err);
