@@ -4,12 +4,31 @@
   margin: auto;
 }
 
+.item-title {
+  font-weight: bold;
+}
+
 .item-main-image {
   width: 100%;
   max-height: 400px;
   object-fit: cover;
   border-radius: 10px;
   margin-bottom: 15px;
+}
+
+.item-favorite {
+  background-color: lightgray;
+  width: fit-content;
+  padding: 5px;
+  border-radius: 10px;
+  margin-right: 10px;
+}
+
+.item-contact {
+  background-color: lightgray;
+  width: fit-content;
+  padding: 5px;
+  border-radius: 10px;
 }
 
 .similar-section {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import Navbar from "../Navbar.js";
 import "./ItemPost.css";
 import { supabase } from "../../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 function ItemPost() {
   const [imageUrls, setImageUrls] = useState([]);
@@ -12,6 +13,7 @@ function ItemPost() {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const navigate = useNavigate();
 
   /** 🔸 jfif → jpeg 변환 */
   async function toJpegBlob(file) {
@@ -176,6 +178,7 @@ function ItemPost() {
       setCategory("");
       setTags([]);
       setImageUrls([]);
+      navigate(`../home`);
     } catch (err) {
       console.error(err);
       setErrorMsg(err.message || "게시 중 오류");

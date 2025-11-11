@@ -20,11 +20,11 @@ function Market({ items = [], loading, errorMsg }) {
   return (
     <div className="market-container">
       <h2 className="market-title">Latest Items</h2>
-      <div className="market-grid">
+      <div className="market-items">
         {items.map((item) => (
           <div
             key={item.id}
-            className="market-card"
+            className="market-item"
             onClick={() => navigate(`/item/${item.id}`)} // ✅ 상세 페이지로 이동
             style={{ cursor: "pointer" }}
           >
@@ -39,9 +39,9 @@ function Market({ items = [], loading, errorMsg }) {
               />
             </div>
 
-            <div className="market-info">
-              <div className="market-item-title">{item.title}</div>
-              <div className="market-item-price">
+            <div className="item-info">
+              <div className="item-name">{item.title}</div>
+              <div className="item-price">
                 {item.price != null ? `${item.price}₩` : ""}
               </div>
               <div className="market-item-meta">
@@ -52,15 +52,24 @@ function Market({ items = [], loading, errorMsg }) {
                   <div className="market-tags">
                     {item.tags.slice(0, 3).map((tag) => (
                       <span key={tag} className="market-tag-chip">
-                        #{tag}
+                        #{tag + " "}
                       </span>
                     ))}
                   </div>
                 )}
               </div>
+              <div className="item-seller">
+                Seller Name
+              </div>
             </div>
           </div>
         ))}
+      </div>
+      <div className="post-button">
+        <div className="post-btn" onClick={() => navigate(`/item-post`)}>
+            <span className="bi bi-plus-square-fill"></span>
+            {" Post"}
+        </div>
       </div>
     </div>
   );
