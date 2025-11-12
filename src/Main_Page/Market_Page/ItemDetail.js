@@ -82,9 +82,9 @@ function ItemDetail() {
             <p><b>Price:</b> {item.price ? `${item.price}₩` : "N/A"}</p>
             <p><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
             <p><b>Seller:</b> Seller Name {"(Seller's Reputation)"}</p>
-            <div className="interact-container row" onClick={changeFavorite}>
-              <div className="item-favorite col-lg-1">
-              <div id="fav" className="0 bi bi-heart"></div>
+            <div className="interact-container row">
+              <div className="item-favorite col-lg-1" onClick={changeFavorite}>
+                <div id="fav" className="0 bi bi-heart"></div>
               <div>Favorite</div>
             </div>
             <div className="item-contact col-lg-1">
