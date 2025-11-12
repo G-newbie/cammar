@@ -1,13 +1,43 @@
 import { supabase } from '../supabaseClient';
-import { 
-  getAuthenticatedUser, 
-  checkAuthorPermission, 
-  validateInput, 
-  safeIncrement, 
-  safeDecrement,
-  createErrorResponse, 
-  createSuccessResponse 
+import {
+  getAuthenticatedUser,
+  checkAuthorPermission,
+  validateInput,
+  createErrorResponse,
+  createSuccessResponse
 } from './authUtils';
+
+const adjustCommentCount = async (postId, delta) => {
+  const { data: post, error: fetchError } = await supabase
+    .from('community_posts')
+    .select('comment_count')
+    .eq('id', postId)
+    .single();
+
+  if (fetchError) {
+    console.warn('[comments] Failed to fetch post for comment_count update', {
+      postId,
+      error: fetchError
+    });
+    return;
+  }
+
+  const nextCount = Math.max(0, (post?.comment_count ?? 0) + delta);
+
+  const { error: updateError } = await supabase
+    .from('community_posts')
+    .update({ comment_count: nextCount })
+    .eq('id', postId);
+
+  if (updateError) {
+    console.warn('[comments] Failed to update comment_count', {
+      postId,
+      delta,
+      attemptedValue: nextCount,
+      error: updateError
+    });
+  }
+};
 
 
 export const createComment = async (postId, commentData) => {
@@ -31,12 +61,7 @@ export const createComment = async (postId, commentData) => {
 
     if (commentError) throw commentError;
 
-    await supabase
-      .from('community_posts')
-      .update({
-        comment_count: safeIncrement('comment_count')
-      })
-      .eq('id', postId);
+    await adjustCommentCount(postId, 1);
 
     return createSuccessResponse('Comment created successfully', {
       id: newComment.id,
@@ -106,12 +131,7 @@ export const deleteComment = async (postId, commentId) => {
 
     if (deleteError) throw deleteError;
 
-    await supabase
-      .from('community_posts')
-      .update({
-        comment_count: safeDecrement('comment_count')
-      })
-      .eq('id', comment.post_id);
+    await adjustCommentCount(comment.post_id, -1);
 
     return createSuccessResponse('Comment deleted successfully');
   } catch (error) {

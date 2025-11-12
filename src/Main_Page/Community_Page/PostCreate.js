@@ -70,32 +70,42 @@ export default function PostCreate() {
       
       if (images.length > 0) {
         for (let i = 0; i < images.length; i++) {
+          console.info('[PostCreate] Uploading image', { index: i, name: images[i]?.name });
           const uploadRes = await uploadImage(images[i]);
           if (uploadRes.res_code === 201) {
             uploadedMedia.push({
               media_url: uploadRes.image_url,
               media_type: 'image',
-              display_order: i
+              display_order: i + 1
             });
           } else {
-            throw new Error(uploadRes.res_msg || 'Failed to upload image');
+            console.error('[PostCreate] Image upload failed', uploadRes);
+            throw new Error(`${uploadRes.res_msg || 'Failed to upload image'} (code: ${uploadRes.res_code ?? 'unknown'})`);
           }
         }
       } else if (video) {
         // Video upload - using uploadImage for now (may need separate video upload API)
+        console.info('[PostCreate] Uploading video', { name: video.name });
         const uploadRes = await uploadImage(video, 'images');
         if (uploadRes.res_code === 201) {
           uploadedMedia.push({
             media_url: uploadRes.image_url,
             media_type: 'video',
-            display_order: 0
+            display_order: 1
           });
         } else {
-          throw new Error(uploadRes.res_msg || 'Failed to upload video');
+          console.error('[PostCreate] Video upload failed', uploadRes);
+          throw new Error(`${uploadRes.res_msg || 'Failed to upload video'} (code: ${uploadRes.res_code ?? 'unknown'})`);
         }
       }
 
       // Create post
+      console.info('[PostCreate] Creating post', {
+        community_id: communityId,
+        title: title.trim(),
+        contentLength: content.trim().length,
+        mediaCount: uploadedMedia.length
+      });
       const postRes = await createPost({
         community_id: communityId,
         title: title.trim(),
@@ -107,10 +117,26 @@ export default function PostCreate() {
         alert('Post created successfully!');
         nav('/community');
       } else {
-        setError(postRes.res_msg || 'Failed to create post');
+        console.error('[PostCreate] createPost response indicates failure', postRes);
+        const details = [
+          postRes.res_msg && `msg: ${postRes.res_msg}`,
+          postRes.res_code != null && `code: ${postRes.res_code}`,
+          postRes.error?.message && `error: ${postRes.error.message}`,
+          postRes.error?.details && `details: ${postRes.error.details}`,
+          postRes.error?.hint && `hint: ${postRes.error.hint}`,
+          postRes.error?.code && `errorCode: ${postRes.error.code}`
+        ].filter(Boolean).join(' | ');
+        setError(`Failed to create post. ${details || 'No additional details.'}`);
       }
     } catch (err) {
-      setError(err.message || 'Network error');
+      console.error('[PostCreate] Unexpected error while submitting post', err);
+      const debugMessage = [
+        err?.message && `message: ${err.message}`,
+        err?.status && `status: ${err.status}`,
+        err?.response?.status && `responseStatus: ${err.response.status}`,
+        err?.response?.data && `responseData: ${JSON.stringify(err.response.data)}`
+      ].filter(Boolean).join(' | ');
+      setError(`Unexpected error occurred. ${debugMessage || 'Check console for more details.'}`);
     } finally {
       setLoading(false);
     }

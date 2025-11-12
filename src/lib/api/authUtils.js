@@ -127,32 +127,6 @@ export const validateInput = {
   }
 };
 
-export const safeIncrement = (field) => {
-  const allowedFields = [
-    'upvotes', 'downvotes', 'comment_count', 'member_count', 
-    'post_count', 'total_reviews', 'unread_by_buyer', 'unread_by_seller'
-  ];
-  
-  if (!allowedFields.includes(field)) {
-    throw new Error(`Field name not allowed: ${field}`);
-  }
-  
-  return supabase.raw(`${field} + 1`);
-};
-
-export const safeDecrement = (field) => {
-  const allowedFields = [
-    'upvotes', 'downvotes', 'comment_count', 'member_count', 
-    'post_count', 'total_reviews', 'unread_by_buyer', 'unread_by_seller'
-  ];
-  
-  if (!allowedFields.includes(field)) {
-    throw new Error(`Field name not allowed: ${field}`);
-  }
-  
-  return supabase.raw(`${field} - 1`);
-};
-
 export const createErrorResponse = (statusCode, message, error = null) => {
   return {
     res_code: statusCode,
