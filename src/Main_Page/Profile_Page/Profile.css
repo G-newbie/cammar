@@ -28,6 +28,18 @@
     font-size: 15px;
 }
 
+.logoutBtn {
+    background-color: #dc3545 !important;
+    color: white;
+    border-color: #dc3545 !important;
+    text-align: center;
+}
+
+.logoutBtn:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
 
 .optionList {
     border-top-style: solid;

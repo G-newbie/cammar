@@ -1,16 +1,81 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Popup from 'reactjs-popup';
 
 import './Profile.css'
 import profile from './profile.png';
 import Navbar from '../Navbar.js';
+import { getCurrentUser, signOut } from '../../lib/api';
 
 function Profile() {
-    // example user data
-    const user = {
-        username: "Wotis Hatt",
-        school: "SUNY Korea",
-        reputation: 100
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [logoutLoading, setLogoutLoading] = useState(false);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            setLoading(true);
+            setError('');
+            try {
+                const res = await getCurrentUser();
+                if (res.res_code === 200) {
+                    setUser(res.user);
+                } else {
+                    setError(res.res_msg || 'Failed to load profile');
+                }
+            } catch (e) {
+                setError('Network error');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadUser();
+    }, []);
+
+    const handleLogout = async () => {
+        if (!window.confirm('Are you sure you want to log out?')) {
+            return;
+        }
+
+        setLogoutLoading(true);
+        try {
+            const result = await signOut();
+            if (result.res_code === 200) {
+                // Clear any local state if needed
+                setUser(null);
+                // Redirect to welcome page
+                navigate('/');
+            } else {
+                alert('Logout failed: ' + (result.res_msg || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error('Logout error:', e);
+            alert('Logout error: ' + e.message);
+        } finally {
+            setLogoutLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div>
+                <Navbar />
+                <div style={{ padding: 40, textAlign: 'center' }}>Loading...</div>
+            </div>
+        );
+    }
+
+    if (error || !user) {
+        return (
+            <div>
+                <Navbar />
+                <div style={{ padding: 40, textAlign: 'center', color: 'red' }}>
+                    {error || 'User not found'}
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -18,17 +83,28 @@ function Profile() {
             <Navbar />
             <div className="row upperCtn">
                 <div className="col-md-3 pfpCtn">
-                    <img src={profile} className="pfp"></img>
+                    <img src={user.profile_image_url || profile} className="pfp" alt="Profile" />
                 </div>
                 <div className="col-md-6 userInfoCtn">
-                    <div className="username">{user.username}</div>
-                    <div className="school">{user.school}</div>
-                    <div className="reputation">Current Reputation: {user.reputation}</div>
+                    <div className="username">{user.display_name || 'User'}</div>
+                    <div className="school">{user.school_verified ? 'SUNY Korea (Verified)' : 'SUNY Korea'}</div>
+                    <div className="reputation">Current Reputation: {user.trust_score || 0}/5.0 ({user.total_reviews || 0} reviews)</div>
                 </div>
                 <div className="col-md-3 editBtnCtn">
                     <Link to='../profileEdit'>
                         <div className="editBtn">Edit</div>
                     </Link>
+                    <div 
+                        className="editBtn logoutBtn" 
+                        onClick={handleLogout}
+                        style={{ 
+                            marginTop: '10px',
+                            cursor: logoutLoading ? 'not-allowed' : 'pointer',
+                            opacity: logoutLoading ? 0.6 : 1
+                        }}
+                    >
+                        {logoutLoading ? 'Logging out...' : 'Logout'}
+                    </div>
                 </div>
             </div>
             <ul className="nav flex-column optionList">

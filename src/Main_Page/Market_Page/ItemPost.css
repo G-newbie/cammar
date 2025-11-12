@@ -1,11 +1,16 @@
 /* Item Creation Page Styles */
-/* === 추가: 업로드 미리보기/에러 표시 === */
+/* === Additional: Upload preview/error display === */
 .preview-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
-  justify-content: center; /* 업로드 영역 아래 가운데 정렬 */
+  justify-content: center; /* Center align below upload area */
+}
+
+.preview-item-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
 .preview-thumb {
@@ -15,22 +20,47 @@
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #fff;
+  display: block;
 }
 
-/* 업로드 영역을 클릭 가능한 라벨로 쓸 때 보조 스타일 */
+.preview-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.preview-remove-btn:hover {
+  background: rgba(220, 53, 69, 1);
+}
+
+/* Helper styles when using upload area as clickable label */
 .image-upload-area {
-  display: block;            /* 라벨 클릭 범위 넓게 */
+  display: block;            /* Expand label click area */
   position: relative;
 }
 
-/* 에러/상태 메시지 */
+/* Error/status messages */
 .error-text {
   margin-top: 8px;
   color: #e11d48;
   font-size: 0.95rem;
 }
 
-/* 버튼 비활성화 상태(로딩 등) */
+/* Button disabled state (loading, etc.) */
 .post-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;

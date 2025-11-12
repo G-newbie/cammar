@@ -1,8 +1,9 @@
 // src/pages/Community_Page/PostCreate.js
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './PostCreate.css';
 import logo from '../../Welcome_Page/logo.png';
+import { getCommunities, createPost, uploadImage } from '../../lib/api';
 
 function wordCount(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -11,21 +12,38 @@ function wordCount(text) {
 export default function PostCreate() {
   const nav = useNavigate();
   const [title, setTitle] = useState('');
-  const [community, setCommunity] = useState('');
+  const [communityId, setCommunityId] = useState('');
   const [content, setContent] = useState('');
   const [images, setImages] = useState([]); // File[]
   const [video, setVideo] = useState(null); // File | null
+  const [communities, setCommunities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const imgInput = useRef(null);
   const vidInput = useRef(null);
+
+  useEffect(() => {
+    const loadCommunities = async () => {
+      try {
+        const res = await getCommunities();
+        if (res.res_code === 200) {
+          setCommunities(res.communities || []);
+        }
+      } catch (e) {
+        console.error('Failed to load communities:', e);
+      }
+    };
+    loadCommunities();
+  }, []);
 
   const contentWords = useMemo(() => wordCount(content), [content]);
   const contentOK = contentWords <= 50;
   const mediaOK = (video && images.length === 0) || (!video && images.length <= 4);
-  const valid = title.trim() && community.trim() && contentOK && mediaOK;
+  const valid = title.trim() && communityId && contentOK && mediaOK;
 
   const onPickImages = (e) => {
     const files = Array.from(e.target.files || []);
-    if (video) { alert('이미 동영상을 선택했습니다. 사진 대신/또는 동영상 하나만 올릴 수 있어요.'); return; }
+    if (video) { alert('Video already selected. You can upload either photos or a single video.'); return; }
     const next = [...images, ...files].slice(0, 4);
     setImages(next);
   };
@@ -33,18 +51,69 @@ export default function PostCreate() {
   const onPickVideo = (e) => {
     const file = (e.target.files || [])[0];
     if (!file) return;
-    if (images.length > 0) { alert('사진을 이미 추가했습니다. 동영상은 사진 없이 1개만 가능합니다.'); return; }
+    if (images.length > 0) { alert('Photos already added. Video is allowed only without photos.'); return; }
     setVideo(file);
   };
 
   const clearMedia = () => { setImages([]); setVideo(null); if (imgInput.current) imgInput.current.value=''; if (vidInput.current) vidInput.current.value=''; };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    if (!valid) return;
-    // TODO: API 연결(FormData 업로드)
-    alert('Post created (mock)!');
-    nav('/community');
+    if (!valid || loading) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Upload media files first
+      const uploadedMedia = [];
+      
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          const uploadRes = await uploadImage(images[i]);
+          if (uploadRes.res_code === 201) {
+            uploadedMedia.push({
+              media_url: uploadRes.image_url,
+              media_type: 'image',
+              display_order: i
+            });
+          } else {
+            throw new Error(uploadRes.res_msg || 'Failed to upload image');
+          }
+        }
+      } else if (video) {
+        // Video upload - using uploadImage for now (may need separate video upload API)
+        const uploadRes = await uploadImage(video, 'images');
+        if (uploadRes.res_code === 201) {
+          uploadedMedia.push({
+            media_url: uploadRes.image_url,
+            media_type: 'video',
+            display_order: 0
+          });
+        } else {
+          throw new Error(uploadRes.res_msg || 'Failed to upload video');
+        }
+      }
+
+      // Create post
+      const postRes = await createPost({
+        community_id: communityId,
+        title: title.trim(),
+        content: content.trim(),
+        media: uploadedMedia
+      });
+
+      if (postRes.res_code === 201) {
+        alert('Post created successfully!');
+        nav('/community');
+      } else {
+        setError(postRes.res_msg || 'Failed to create post');
+      }
+    } catch (err) {
+      setError(err.message || 'Network error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,13 +130,11 @@ export default function PostCreate() {
         <input className="pc-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
 
         <label className="pc-label">Community</label>
-        <select className="pc-input" value={community} onChange={(e) => setCommunity(e.target.value)}>
+        <select className="pc-input" value={communityId} onChange={(e) => setCommunityId(e.target.value)}>
           <option value="">Select a community</option>
-          <option>CSE Lounge</option>
-          <option>League of Legend</option>
-          <option>Singer</option>
-          <option>Triple Street</option>
-          <option>Playboys</option>
+          {communities.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
         </select>
 
         <label className="pc-label">Content (max 50 words)</label>
@@ -100,7 +167,10 @@ export default function PostCreate() {
           </div>
         </div>
 
-        <button type="submit" className="pc-submit" disabled={!valid}>Click to post</button>
+        {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
+        <button type="submit" className="pc-submit" disabled={!valid || loading}>
+          {loading ? 'Posting...' : 'Click to post'}
+        </button>
       </form>
     </div>
   );
