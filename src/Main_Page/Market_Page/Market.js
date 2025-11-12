@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+// src/Main_Page/Market_Page/Market.js
+import { useNavigate } from "react-router-dom";
 import "./Market.css";
 
 function Market({ items = [], loading, errorMsg }) {
@@ -12,63 +13,63 @@ function Market({ items = [], loading, errorMsg }) {
     return <div className="market-container error-text">{errorMsg}</div>;
   }
 
+  if (!items.length) {
+    return <div className="market-container">No items yet.</div>;
+  }
+
   return (
     <div className="market-container">
       <h2 className="market-title">Latest Items</h2>
+      <div className="market-items">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="market-item"
+            onClick={() => navigate(`/item/${item.id}`)} // ✅ 상세 페이지로 이동
+            style={{ cursor: "pointer" }}
+          >
+            <div className="market-image-wrapper">
+              <img
+                src={
+                  item.image_url ||
+                  "https://placehold.co/300x200?text=No+Image"
+                }
+                alt={item.title}
+                className="market-image"
+              />
+            </div>
 
-      {items.length === 0 ? (
-        <div className="market-empty">No items yet.</div>
-      ) : (
-        <div className="market-grid">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="market-card"
-              onClick={() => navigate(`/item/${item.id}`)}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="market-image-wrapper">
-                <img
-                  src={
-                    item.image_url ||
-                    (item.images && item.images[0] && item.images[0].url) ||
-                    "https://placehold.co/300x200?text=No+Image"
-                  }
-                  alt={item.title}
-                  className="market-image"
-                />
+            <div className="item-info">
+              <div className="item-name">{item.title}</div>
+              <div className="item-price">
+                {item.price != null ? `${item.price}₩` : ""}
               </div>
-
-              <div className="market-info">
-                <div className="market-item-title">{item.title}</div>
-                <div className="market-item-price">
-                  {item.price != null ? `${item.price}₩` : ""}
-                </div>
-                <div className="market-item-meta">
-                  <span className="market-item-category">
-                    {item.category || "etc"}
-                  </span>
-                  {item.tags && item.tags.length > 0 && (
-                    <div className="market-tags">
-                      {item.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="market-tag-chip">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className="market-item-meta">
+                <span className="market-item-category">
+                  {item.category || "etc"}
+                </span>
+                {item.tags && item.tags.length > 0 && (
+                  <div className="market-tags">
+                    {item.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="market-tag-chip">
+                        #{tag + " "}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="item-seller">
+                Seller Name
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
+          </div>
+        ))}
+      </div>
       <div className="post-button">
-        <Link to="/item-post" className="post-btn">
-          <span className="post-icon">+</span>
-          <span className="post-text">Post</span>
-        </Link>
+        <div className="post-btn" onClick={() => navigate(`/item-post`)}>
+            <span className="bi bi-plus-square-fill"></span>
+            {" Post"}
+        </div>
       </div>
     </div>
   );

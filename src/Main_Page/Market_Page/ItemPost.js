@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Navbar from "../Navbar.js";
 import "./ItemPost.css";
 import { supabase } from "../../lib/supabaseClient";
-import { uploadImage, createItem } from "../../lib/api";
+import { useNavigate } from "react-router-dom";
 
 function ItemPost() {
-  const navigate = useNavigate();
-  const [imageFiles, setImageFiles] = useState([]); // Store File objects for preview
-  const [imagePreviews, setImagePreviews] = useState([]); // Store preview URLs
+  const [imageUrls, setImageUrls] = useState([]);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
@@ -16,8 +13,9 @@ function ItemPost() {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const navigate = useNavigate();
 
-  /** 🔸 Convert jfif to jpeg */
+  /** 🔸 jfif → jpeg 변환 */
   async function toJpegBlob(file) {
     const dataUrl = await new Promise((res, rej) => {
       const r = new FileReader();
@@ -44,22 +42,32 @@ function ItemPost() {
     return new File([blob], newName, { type: "image/jpeg" });
   }
 
-  /** 🔸 Upload to Supabase Storage and return public URL (using API) */
+  /** 🔸 Supabase Storage 업로드 후 공개 URL 반환 */
   async function uploadAndGetPublicUrl(file) {
+    const userId = "guest";
+    const path = `user-${userId}/${Date.now()}-${file.name}`;
+
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (ext === "jfif" || file.type === "" || file.type === "image/pjpeg") {
-      file = await toJpegBlob(file);
+    let contentType = file.type || "application/octet-stream";
+    if (ext === "jfif" || contentType === "" || contentType === "image/pjpeg") {
+      contentType = "image/jpeg";
     }
 
-    const result = await uploadImage(file, 'items');
-    if (result.res_code === 201) {
-      return result.image_url;
-    } else {
-      throw new Error(result.res_msg || "Upload failed");
+    const { data, error } = await supabase.storage
+      .from("items")
+      .upload(path, file, { upsert: true, contentType });
+
+    if (error) {
+      console.error("[upload error]", error);
+      throw new Error(error.message || "Upload failed");
     }
+
+    const { data: pub } = supabase.storage.from("items").getPublicUrl(data.path);
+    console.log("[upload ok]", pub?.publicUrl);
+    return pub.publicUrl;
   }
 
-  /** 🔸 Call classify-image Edge Function */
+  /** 🔸 classify-image Edge Function 호출 */
   async function classifyImage(imageUrl) {
     const { data, error } = await supabase.functions.invoke("classify-image", {
       body: { imageUrl },
@@ -68,66 +76,45 @@ function ItemPost() {
     return data;
   }
 
-  /** 🔸 When file is selected - create previews only, don't upload yet */
-  function onSelectFiles(e) {
-    const picked = Array.from(e.target.files || []);
+  /** 🔸 파일 선택 시 */
+  async function onSelectFiles(e) {
+    const picked = Array.from(e.target.files || []).slice(0, 10);
     if (!picked.length) return;
 
-    // Validate file types before adding
-    const validFiles = [];
-    const invalidFiles = [];
-
-    picked.forEach(file => {
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-      
-      if (allowedTypes.includes(file.type) && allowedExtensions.includes(ext)) {
-        validFiles.push(file);
-      } else {
-        invalidFiles.push(file.name);
-      }
-    });
-
-    if (invalidFiles.length > 0) {
-      setErrorMsg(`Invalid file types: ${invalidFiles.join(', ')}. Only JPEG, PNG, and WebP are allowed.`);
-    }
-
-    if (validFiles.length === 0) return;
-
-    // Limit to 10 images total
-    const remainingSlots = 10 - imageFiles.length;
-    const filesToAdd = validFiles.slice(0, remainingSlots);
-
-    // Create preview URLs
-    const newPreviews = filesToAdd.map(file => URL.createObjectURL(file));
-    
-    setImageFiles(prev => [...prev, ...filesToAdd]);
-    setImagePreviews(prev => [...prev, ...newPreviews]);
+    setLoading(true);
     setErrorMsg("");
 
-    // Auto-classify using first image (if available)
-    if (filesToAdd.length > 0 && imageFiles.length === 0) {
-      const firstFile = filesToAdd[0];
-      const previewUrl = newPreviews[0];
-      
-      // Note: Classification will happen after upload, but we can try with preview
-      // For now, we'll skip classification until upload
+    try {
+      const urls = [];
+      for (let f of picked) {
+        const ext = f.name.split(".").pop()?.toLowerCase();
+        if (ext === "jfif" || f.type === "" || f.type === "image/pjpeg") {
+          f = await toJpegBlob(f);
+        }
+        const u = await uploadAndGetPublicUrl(f);
+        urls.push(u);
+      }
+      setImageUrls(urls);
+
+      // 대표 이미지 한 장으로 자동 분류
+      try {
+        const res = await classifyImage(urls[0]);
+        setCategory(res?.category || "");
+        setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
+      } catch (err) {
+        console.warn("classify failed", err);
+        setErrorMsg("이미지 분류 실패 (업로드는 성공)");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || "업로드 오류");
+    } finally {
+      setLoading(false);
+      e.target.value = "";
     }
-
-    e.target.value = "";
   }
 
-  /** 🔸 Remove image from preview */
-  function removeImage(index) {
-    // Revoke the object URL to free memory
-    URL.revokeObjectURL(imagePreviews[index]);
-    
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-  }
-
-  /** 🔸 Create post */
+  /** 🔸 게시물 등록 */
   async function onPost() {
     setLoading(true);
     setErrorMsg("");
@@ -139,92 +126,62 @@ function ItemPost() {
           ? Number(String(price).replace(/[^0-9.]/g, ""))
           : null;
 
-      // Upload images first
-      const uploadedUrls = [];
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
-        try {
-          let fileToUpload = file;
-          const ext = file.name.split(".").pop()?.toLowerCase();
-          if (ext === "jfif" || file.type === "" || file.type === "image/pjpeg") {
-            fileToUpload = await toJpegBlob(file);
-          }
-          const url = await uploadAndGetPublicUrl(fileToUpload);
-          uploadedUrls.push(url);
-        } catch (err) {
-          console.error(`Failed to upload image ${i + 1}:`, err);
-          throw new Error(`Failed to upload image ${i + 1}: ${err.message}`);
-        }
+      const { data: itemRow, error: itemErr } = await supabase
+        .from("items")
+        .insert({
+          title: title.trim(),
+          description: desc?.trim() || null,
+          category: category?.trim() || null,
+          price: cleanPrice,
+        })
+        .select("id")
+        .single();
+      if (itemErr) throw itemErr;
+
+      const itemId = itemRow.id;
+
+      // 이미지 저장
+      if (imageUrls.length) {
+        const rows = imageUrls.map((url, i) => ({
+          item_id: itemId,
+          url,
+          sort_order: i,
+        }));
+        const { error: imgErr } = await supabase.from("item_images").insert(rows);
+        if (imgErr) throw imgErr;
       }
 
-      // Auto-classify using first image if available
-      if (uploadedUrls.length > 0 && !category) {
-        try {
-          const res = await classifyImage(uploadedUrls[0]);
-          setCategory(res?.category || "");
-          setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
-        } catch (err) {
-          console.warn("classify failed", err);
-          // Don't fail the post if classification fails
-        }
+      // 태그 저장
+      if (tags.length) {
+        const rows = tags.map((t) => ({
+          item_id: itemId,
+          tag: t.replace(/^#/, ""),
+        }));
+        const { error: tagErr } = await supabase.from("item_tags").insert(rows);
+        if (tagErr) throw tagErr;
       }
 
-      // Prepare images array for API
-      const imagesData = uploadedUrls.map((url, i) => ({
-        image_url: url,
-        sort_order: i,
-      }));
-
-      const itemRes = await createItem({
-        title: title.trim(),
-        description: desc?.trim() || null,
-        price: cleanPrice,
-        category_id: null, // TODO: Map category name to category_id if needed
-        images: imagesData,
+      // ✅ 태그 저장 이후 Embedding 생성
+      await supabase.functions.invoke("item-embed", {
+        body: {
+          item_id: itemId,
+          title,
+          description: desc,
+          tags
+        },
       });
-
-      if (itemRes.res_code !== 201) {
-        throw new Error(itemRes.res_msg || "Failed to create item");
-      }
-
-      const itemId = itemRes.item?.id;
-
-      if (itemId) {
-        try {
-          await supabase.functions.invoke("item-embed", {
-            body: {
-              item_id: itemId,
-              title: title.trim(),
-              description: desc?.trim() || "",
-              tags,
-            },
-          });
-        } catch (embedErr) {
-          console.warn("Embedding generation failed:", embedErr);
-        }
-      }
-
-      // Clean up preview URLs and reset state
-      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
-
-      alert("Post created!");
-
+      
+      alert("게시 완료!");
       setTitle("");
       setDesc("");
       setPrice("");
       setCategory("");
       setTags([]);
-      setImageFiles([]);
-      setImagePreviews([]);
-
-      if (itemId) {
-        navigate(`/item/${itemId}`);
-      } else {
-        navigate("/home");
-      }
+      setImageUrls([]);
+      navigate(`../home`);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "Error while posting");
+      setErrorMsg(err.message || "게시 중 오류");
     } finally {
       setLoading(false);
     }
@@ -236,64 +193,29 @@ function ItemPost() {
       <div className="item-creation-container">
         <div className="item-creation-content">
 
-          {/* Image upload */}
+          {/* 이미지 업로드 */}
           <div className="image-upload-section">
             <label className="image-upload-area">
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                accept="image/*,.jfif,.jpg,.jpeg,.png"
                 multiple
                 hidden
                 onChange={onSelectFiles}
-                disabled={imageFiles.length >= 10}
               />
               <div className="upload-icon">+</div>
-              <p className="upload-text">
-                Select to insert images (up to 10) - {imageFiles.length}/10 selected
-              </p>
+              <p className="upload-text">Select to insert images (up to 10)</p>
             </label>
-            {imagePreviews.length > 0 && (
+            {imageUrls.length > 0 && (
               <div className="preview-grid">
-                {imagePreviews.map((previewUrl, index) => (
-                  <div key={index} className="preview-item-wrapper" style={{ position: 'relative' }}>
-                    <img 
-                      src={previewUrl} 
-                      className="preview-thumb" 
-                      alt={`preview ${index + 1}`} 
-                    />
-                    <button
-                      type="button"
-                      className="preview-remove-btn"
-                      onClick={() => removeImage(index)}
-                      style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        background: 'rgba(220, 53, 69, 0.9)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: '24px',
-                        height: '24px',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                        lineHeight: '1',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 'bold'
-                      }}
-                      title="Remove image"
-                    >
-                      ×
-                    </button>
-                  </div>
+                {imageUrls.map((u) => (
+                  <img key={u} src={u} className="preview-thumb" alt="preview" />
                 ))}
               </div>
             )}
           </div>
 
-          {/* Input form */}
+          {/* 입력 폼 */}
           <div className="form-section">
             <div className="form-group">
               <label className="form-label">Title</label>
@@ -326,7 +248,7 @@ function ItemPost() {
               />
             </div>
 
-            {/* Always editable Category */}
+            {/* 항상 수정 가능한 Category */}
             <div className="form-group">
               <label className="form-label">Category (auto, editable)</label>
               <input
@@ -338,7 +260,7 @@ function ItemPost() {
               />
             </div>
 
-            {/* Always editable Tags */}
+            {/* 항상 수정 가능한 Tags */}
             <div className="form-group">
               <label className="form-label">Tags (auto, comma separated)</label>
               <input
@@ -353,7 +275,7 @@ function ItemPost() {
               />
             </div>
 
-            {/* Submit button */}
+            {/* 등록 버튼 */}
             <div className="post-section">
               <button className="post-button" onClick={onPost} disabled={loading}>
                 {loading ? "Processing..." : "Click to post"}

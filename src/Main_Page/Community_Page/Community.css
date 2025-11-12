@@ -4,7 +4,6 @@
   grid-template-columns: 260px 1fr;
   height: 100vh;
   background: #efefef;
-  margin-top: 56px; /* pushes page below the fixed navbar */
 }
 
 
@@ -55,6 +54,10 @@
   font-weight: bold;
   text-align: center;
 }
+.sidebar-home.active {
+  background: #999;
+  color:white;
+}
 .sidebar-title {
   font-weight: bold;
   margin-top: 10px;
@@ -73,7 +76,7 @@
   color: white;
 }
 .sidebar-create {
-  margin-top: auto;
+  margin-top: 15px;
   background: #eaeaea;
   border: 2px solid #333;
   border-radius: 20px;
@@ -87,6 +90,24 @@
   background: #efefef;
   padding: 20px;
   overflow-y: auto;
+}
+.post-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    margin-bottom: 10px;
+}
+.post-btn {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
 }
 .post-card {
   background: #e0e0e0;

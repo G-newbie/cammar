@@ -50,6 +50,19 @@ function ItemDetail() {
   if (errorMsg) return <p className="error">{errorMsg}</p>;
   if (!item) return <p>Item not found.</p>;
 
+  /* TODO: add current post to user's favorite list */
+  function changeFavorite() {
+    const favClassList = document.getElementById("fav").classList;
+    if(favClassList[0] == "1") {
+      favClassList.replace("1", "0");
+      favClassList.replace("bi-heart-fill", "bi-heart");
+    }
+    else {
+      favClassList.replace("0", "1");
+      favClassList.replace("bi-heart", "bi-heart-fill");
+    }
+  }
+
   return (
     <div className="item-detail-wrapper">
       <Navbar />
@@ -58,7 +71,7 @@ function ItemDetail() {
 
           {/* ✅ 상품 상세 */}
           <div className="item-main">
-            <h2>{item.title}</h2>
+            <h2 className="item-title">{item.title}</h2>
             <img
               src={item.image_url || "https://placehold.co/400x300"}
               alt={item.title}
@@ -68,6 +81,17 @@ function ItemDetail() {
             <p><b>Category:</b> {item.category || "N/A"}</p>
             <p><b>Price:</b> {item.price ? `${item.price}₩` : "N/A"}</p>
             <p><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
+            <p><b>Seller:</b> Seller Name {"(Seller's Reputation)"}</p>
+            <div className="interact-container row" onClick={changeFavorite}>
+              <div className="item-favorite col-lg-1">
+              <div id="fav" className="0 bi bi-heart"></div>
+              <div>Favorite</div>
+            </div>
+            <div className="item-contact col-lg-1">
+              <div className="bi bi-chat-left-dots-fill"></div>
+              <div>Contact</div>
+            </div>
+            </div>
           </div>
 
           {/* ✅ 비슷한 상품 추천 */}
