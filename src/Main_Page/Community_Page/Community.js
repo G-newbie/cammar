@@ -92,10 +92,9 @@ function Community() {
 
         {/* Main content area with post cards */}
         <main className="community-main">
-          <div className="post-button">
-            <div className="post-btn" onClick={() => navigate(`./post/create`)}>
-                <span className="bi bi-plus-square-fill"></span>
-                {" Post"}
+          <div className="postButton">
+            <div className="postBtn" onClick={() => navigate(`./post/create`)}>
+                <div>Upload post</div>
             </div>
           </div>
           {posts.map((p) => (

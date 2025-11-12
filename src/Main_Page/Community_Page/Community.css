@@ -91,23 +91,23 @@
   padding: 20px;
   overflow-y: auto;
 }
-.post-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
+.postButton {
+    position: sticky;
+    top: 0;
     margin-bottom: 10px;
+    cursor: pointer;
 }
-.post-btn {
+.postBtn {
     display: flex;
     align-items: center;
-    background-color: transparent;
+    justify-content: center;
+    background-color: rgb(62, 104, 255);
     color: white;
     border: none;
     padding: 15px 25px;
     font-size: 1.1rem;
     font-weight: 600;
-    cursor: pointer;
+    border-radius: 8px;
 }
 .post-card {
   background: #e0e0e0;
