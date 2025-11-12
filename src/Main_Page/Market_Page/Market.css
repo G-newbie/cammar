@@ -128,16 +128,16 @@
         border-radius: 20px;
     }
     
-    .item-image {
+    .market-image{
         flex-shrink: 0;
         margin-right: 20px;
+        width: 200px;
+        height: 200px;
     }
     
-    .item-image img {
-        width: 100px;
-        height: 100px;
+    .market-image img {
         border-radius: 8px;
-        object-fit: cover;
+        object-fit: fill;
     }
     
     .item-info {
@@ -170,35 +170,25 @@
 }
 
 /* Post Button */
-.post-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.post-btn {
-    display: flex;
-    align-items: center;
-    background-color: transparent;
-    color: white;
-    border: none;
-    padding: 15px 25px;
-    font-size: 1.1rem;
-    font-weight: 600;
+.itemUploadButton {
+    position: sticky;
+    top: 5px;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: auto;
+
+    margin-bottom: 10px;
 }
 
-.post-icon {
-    font-size: 1.5rem;
-    margin-right: 8px;
-    font-weight: bold;
+.itemUploadBtn {
+    background-color: rgb(62, 104, 255);
+    width: 500px;
+    border-radius: 8px;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
 }
-
-.post-text {
-    font-size: 1rem;
-}
-
 /* Mobile Post Button Adjustment */
 @media (max-width: 768px) {
     .post-button {

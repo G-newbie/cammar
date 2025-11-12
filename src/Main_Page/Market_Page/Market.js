@@ -20,6 +20,11 @@ function Market({ items = [], loading, errorMsg }) {
   return (
     <div className="market-container">
       <h2 className="market-title">Latest Items</h2>
+      <div className="itemUploadButton d-flex justify-content-center align-items-center">
+        <div className="itemUploadBtn d-flex justify-content-center align-items-center" onClick={() => navigate(`/item-post`)}>
+            <div className="post-text">List your item</div>
+        </div>
+      </div>
       <div className="market-items">
         {items.map((item) => (
           <div
@@ -64,12 +69,6 @@ function Market({ items = [], loading, errorMsg }) {
             </div>
           </div>
         ))}
-      </div>
-      <div className="post-button">
-        <div className="post-btn" onClick={() => navigate(`/item-post`)}>
-            <span className="bi bi-plus-square-fill"></span>
-            {" Post"}
-        </div>
       </div>
     </div>
   );
