@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import './Post.css';
+import Navbar from '../Navbar.js';
 import logo from '../../Welcome_Page/logo.png';
 
 const MOCK = {
@@ -31,18 +32,16 @@ export default function Post() {
   };
 
   return (
+    <>
+    <Navbar />
     <div className="post-grid">
-      <header className="post-topbar">
-        <Link to="/home"><img src={logo} alt="logo" className="post-logo" /></Link>
-        <div className="post-top-title">Community</div>
-      </header>
 
-      <aside className="post-sidebar">
+      <aside className="post-sidebar col">
         <div className="post-pill active">CSE Lounge</div>
         <button className="post-pill" onClick={() => nav('/community')}>← Back to list</button>
       </aside>
 
-      <main className="post-main">
+      <main className="post-main col">
         <div className="post-header">
           <div>
             <div className="post-title">{MOCK.title}</div>
@@ -79,5 +78,7 @@ export default function Post() {
         ))}
       </main>
     </div>
+    </>
+    
   );
 }
