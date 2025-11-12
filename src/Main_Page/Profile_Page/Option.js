@@ -99,11 +99,7 @@ function Option(props) {
     ]
     
 
-    // Determine what to show based on URL or default
-    // const isPosts = location.pathname.includes('Posts') || location.search.includes('type=posts');
-    // const isItems = location.pathname.includes('History') || location.search.includes('type=items');
-    // const isWishlists = location.pathname.includes('Favorite') || location.search.includes('type=wishlists');
-
+    // Determine what to show based on props
     const isMyItems = props.mode == "myItem" ? true : false;
     const isViewedItems = props.mode == "viewedItem" ? true : false;
     const isPosts = props.mode == "post" ? true : false;
@@ -166,43 +162,6 @@ function Option(props) {
                     default:
                         break;
                 }
-
-                // if (isPosts) {
-                //     const res = await getUserPosts(currentUser.id);
-                //     if (res.res_code === 200) {
-                //         setItems(res.posts || []);
-                //     } else {
-                //         setError(res.res_msg || 'Failed to load posts');
-                //     }
-                // } else if (isFavorite) {
-                //     const res = await getUserWishlists(currentUser.id);
-                //     if (res.res_code === 200) {
-                //         // Transform wishlists to items format for display
-                //         const transformed = (res.wishlists || []).map(w => ({
-                //             id: w.items.id,
-                //             title: w.items.title,
-                //             price: w.items.price,
-                //             image: (w.items.item_images && w.items.item_images[0] && w.items.item_images[0].url) || null
-                //         }));
-                //         setItems(transformed);
-                //     } else {
-                //         setError(res.res_msg || 'Failed to load wishlists');
-                //     }
-                // } else {
-                //     // Default: User's Item History
-                //     const res = await getUserItems(currentUser.id);
-                //     if (res.res_code === 200) {
-                //         const transformed = (res.items || []).map(item => ({
-                //             id: item.id,
-                //             title: item.title,
-                //             price: item.price,
-                //             image: (item.item_images && item.item_images[0] && item.item_images[0].url) || null
-                //         }));
-                //         setItems(transformed);
-                //     } else {
-                //         setError(res.res_msg || 'Failed to load items');
-                //     }
-                // }
             } catch (e) {
                 setError('Network error');
             } finally {
@@ -235,32 +194,6 @@ function Option(props) {
                     </div>
                 ))
             }
-            
-
-            {/* {items.length === 0 ? (
-                <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No items found</div>
-                ) : (
-                    items.map(item => (
-                        <div 
-                            key={item.id} 
-                            className="optionItem"
-                            onClick={() => navigate(`/item/${item.id}`)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <div className="optionImage">
-                                <img 
-                                    src={item.image || 'https://via.placeholder.com/100x100/cccccc/666666?text=No+Image'} 
-                                    alt={item.title || item.name} 
-                                />
-                            </div>
-                            <div className="optionInfo">
-                                <h3 className="optionName">{item.title || item.name}</h3>
-                                <p className="optionPrice">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
-                                <div className="item-seller">Seller Name</div>
-                            </div>
-                        </div>
-                    ))
-                )} */}
         </div>
     )
 }
