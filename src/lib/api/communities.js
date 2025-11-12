@@ -101,7 +101,7 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data: posts, error: postsError, count } = await supabase
+    let query = supabase
       .from('community_posts')
       .select(`
         id,
@@ -122,10 +122,15 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
           media_type,
           display_order
         )
-      `)
-      .eq('community_id', communityId)
+      `, { count: 'exact', head: false })
       .order('created_at', { ascending: false })
       .range(from, to);
+
+    if (communityId) {
+      query = query.eq('community_id', communityId);
+    }
+
+    const { data: posts, error: postsError, count } = await query;
 
     if (postsError) throw postsError;
 
@@ -133,11 +138,15 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
       id: post.id,
       title: post.title,
       content: post.content,
-      author: {
+      author: post.users ? {
         id: post.users.id,
         display_name: post.users.display_name,
         trust_score: post.users.trust_score
-      },
+      } : null,
+      community: post.communities ? {
+        id: post.communities.id,
+        name: post.communities.name
+      } : null,
       upvotes: post.upvotes,
       downvotes: post.downvotes,
       comment_count: post.comment_count,
@@ -150,7 +159,7 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
       created_at: post.created_at
     }));
 
-    const totalPages = Math.ceil(count / limit);
+    const totalPages = count != null ? Math.ceil(count / limit) : null;
 
     return {
       res_code: 200,
@@ -160,7 +169,7 @@ export const getCommunityPosts = async (communityId, filters = {}) => {
         current_page: page,
         total_pages: totalPages,
         total_items: count,
-        has_next: page < totalPages
+        has_next: totalPages ? page < totalPages : false
       }
     };
   } catch (error) {

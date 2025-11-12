@@ -1,14 +1,4 @@
 import { supabase } from '../supabaseClient';
-import { 
-  getAuthenticatedUser, 
-  checkAuthorPermission, 
-  validateInput, 
-  safeIncrement, 
-  safeDecrement,
-  createErrorResponse, 
-  createSuccessResponse 
-} from './authUtils';
-
 export const getPostDetails = async (postId) => {
   try {
     const { data: post, error: postError } = await supabase
@@ -107,6 +97,8 @@ export const createPost = async (postData) => {
       };
     }
 
+    console.info('[createPost] Authenticated user', { id: user.id });
+
     const { community_id, title, content, media } = postData;
 
     const { data: newPost, error: postError } = await supabase
@@ -125,7 +117,18 @@ export const createPost = async (postData) => {
       .select()
       .single();
 
-    if (postError) throw postError;
+    if (postError) {
+      console.error('[createPost] Insert into community_posts failed', {
+        error: postError,
+        payload: {
+          community_id,
+          titleLength: title?.length,
+          contentLength: content?.length,
+          mediaCount: media?.length ?? 0
+        }
+      });
+      throw postError;
+    }
 
     if (media && media.length > 0) {
       const mediaData = media.map(item => ({
@@ -139,15 +142,42 @@ export const createPost = async (postData) => {
         .from('post_media')
         .insert(mediaData);
 
-      if (mediaError) throw mediaError;
+      if (mediaError) {
+        console.error('[createPost] Insert into post_media failed', {
+          error: mediaError,
+          postId: newPost.id,
+          mediaDataCount: mediaData.length
+        });
+        throw mediaError;
+      }
     }
 
-    await supabase
+    const { data: community, error: communityFetchError } = await supabase
       .from('communities')
-      .update({
-        post_count: supabase.raw('post_count + 1')
-      })
-      .eq('id', community_id);
+      .select('post_count')
+      .eq('id', community_id)
+      .single();
+
+    if (communityFetchError) {
+      console.warn('[createPost] Failed to fetch community for post_count update', {
+        error: communityFetchError,
+        community_id
+      });
+    } else {
+      const nextCount = (community?.post_count ?? 0) + 1;
+      const { error: communityUpdateError } = await supabase
+        .from('communities')
+        .update({ post_count: nextCount })
+        .eq('id', community_id);
+
+      if (communityUpdateError) {
+        console.warn('[createPost] Failed to update community post_count', {
+          error: communityUpdateError,
+          community_id,
+          attemptedValue: nextCount
+        });
+      }
+    }
 
     return {
       res_code: 201,
@@ -162,10 +192,16 @@ export const createPost = async (postData) => {
       }
     };
   } catch (error) {
+    console.error('[createPost] Unexpected error', error);
     return {
-      res_code: 400,
-      res_msg: error.message,
-      error: error
+      res_code: error?.code || 400,
+      res_msg: error?.message || 'Failed to create post',
+      error: {
+        ...error,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code
+      }
     };
   }
 };
@@ -277,12 +313,32 @@ export const deletePost = async (postId) => {
 
     if (deleteError) throw deleteError;
     
-    await supabase
+    const { data: community, error: communityFetchError } = await supabase
       .from('communities')
-      .update({
-        post_count: supabase.raw('post_count - 1')
-      })
-      .eq('id', post.community_id);
+      .select('post_count')
+      .eq('id', post.community_id)
+      .single();
+
+    if (communityFetchError) {
+      console.warn('[deletePost] Failed to fetch community for post_count decrement', {
+        error: communityFetchError,
+        community_id: post.community_id
+      });
+    } else {
+      const nextCount = Math.max(0, (community?.post_count ?? 1) - 1);
+      const { error: communityUpdateError } = await supabase
+        .from('communities')
+        .update({ post_count: nextCount })
+        .eq('id', post.community_id);
+
+      if (communityUpdateError) {
+        console.warn('[deletePost] Failed to update community post_count', {
+          error: communityUpdateError,
+          community_id: post.community_id,
+          attemptedValue: nextCount
+        });
+      }
+    }
 
     return {
       res_code: 200,

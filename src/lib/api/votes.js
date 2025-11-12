@@ -1,12 +1,51 @@
 import { supabase } from '../supabaseClient';
-import { 
-  getAuthenticatedUser, 
-  validateInput, 
-  safeIncrement, 
-  safeDecrement,
-  createErrorResponse, 
-  createSuccessResponse 
+import {
+  getAuthenticatedUser,
+  validateInput,
+  createErrorResponse,
+  createSuccessResponse
 } from './authUtils';
+
+const adjustPostVoteCounters = async (postId, adjustments) => {
+  const fields = Object.keys(adjustments);
+  if (fields.length === 0) return;
+
+  const { data: post, error: fetchError } = await supabase
+    .from('community_posts')
+    .select(fields.join(','))
+    .eq('id', postId)
+    .single();
+
+  if (fetchError) {
+    console.warn('[votes] Failed to fetch post for vote counter update', {
+      postId,
+      adjustments,
+      error: fetchError
+    });
+    return;
+  }
+
+  const updatePayload = {};
+  fields.forEach((field) => {
+    const current = post?.[field] ?? 0;
+    const next = current + adjustments[field];
+    updatePayload[field] = next < 0 ? 0 : next;
+  });
+
+  const { error: updateError } = await supabase
+    .from('community_posts')
+    .update(updatePayload)
+    .eq('id', postId);
+
+  if (updateError) {
+    console.warn('[votes] Failed to update vote counters', {
+      postId,
+      adjustments,
+      attemptedPayload: updatePayload,
+      error: updateError
+    });
+  }
+};
 
 export const voteOnPost = async (postId, voteData) => {
   try {
@@ -36,12 +75,7 @@ export const voteOnPost = async (postId, voteData) => {
           .eq('id', existingVote.id);
 
         const updateField = vote_type === 'upvote' ? 'upvotes' : 'downvotes';
-        await supabase
-          .from('community_posts')
-          .update({
-            [updateField]: safeDecrement(updateField)
-          })
-          .eq('id', postId);
+        await adjustPostVoteCounters(postId, { [updateField]: -1 });
 
         voteResult = null;
       } else {
@@ -59,13 +93,10 @@ export const voteOnPost = async (postId, voteData) => {
         const oldField = existingVote.vote_type === 'upvote' ? 'upvotes' : 'downvotes';
         const newField = vote_type === 'upvote' ? 'upvotes' : 'downvotes';
 
-        await supabase
-          .from('community_posts')
-          .update({
-            [oldField]: safeDecrement(oldField),
-            [newField]: safeIncrement(newField)
-          })
-          .eq('id', postId);
+        await adjustPostVoteCounters(postId, {
+          [oldField]: -1,
+          [newField]: 1
+        });
 
         voteResult = updatedVote;
       }
@@ -85,12 +116,7 @@ export const voteOnPost = async (postId, voteData) => {
       if (createError) throw createError;
 
       const updateField = vote_type === 'upvote' ? 'upvotes' : 'downvotes';
-      await supabase
-        .from('community_posts')
-        .update({
-          [updateField]: safeIncrement(updateField)
-        })
-        .eq('id', postId);
+      await adjustPostVoteCounters(postId, { [updateField]: 1 });
 
       voteResult = newVote;
     }
