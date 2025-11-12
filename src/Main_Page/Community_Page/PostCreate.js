@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './PostCreate.css';
 import logo from '../../Welcome_Page/logo.png';
+import Navbar from '../Navbar';
 import { getCommunities, createPost, uploadImage } from '../../lib/api';
 
 function wordCount(text) {
@@ -144,10 +145,8 @@ export default function PostCreate() {
 
   return (
     <div className="pc-wrap">
-      <header className="pc-topbar">
-        <Link to="/home"><img src={logo} alt="logo" className="pc-logo" /></Link>
-        <div className="pc-top-title">Community</div>
-      </header>
+      
+      <Navbar />
 
       <div className="pc-title">New Post</div>
 
