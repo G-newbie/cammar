@@ -5,3 +5,5 @@ function OptionPage() {
     </div>
   )
 }
+
+export default OptionPage;

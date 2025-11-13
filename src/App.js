@@ -27,7 +27,7 @@ import ItemPost from './Main_Page/Market_Page/ItemPost.js';
 import ItemDetail from './Main_Page/Market_Page/ItemDetail.js'; // ✅ 새로 추가
 import Profile from './Main_Page/Profile_Page/Profile.js';
 import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
-import Option from './Main_Page/Profile_Page/Option.js';
+import OptionPage from './Main_Page/Profile_Page/OptionPage.js';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
