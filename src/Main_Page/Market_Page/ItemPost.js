@@ -15,6 +15,13 @@ function ItemPost() {
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
+  /** 🔸 파일 이름을 Supabase key용으로 안전하게 변환 (한글/특수문자 → _) */
+  function sanitizeFileName(name) {
+    return (name || "image")
+      .normalize("NFKD")        // 유니코드 분해
+      .replace(/[^\w.-]+/g, "_"); // 영문/숫자/언더바/점/하이픈만 남기기
+  }
+
   /** 🔸 jfif → jpeg 변환 */
   async function toJpegBlob(file) {
     const dataUrl = await new Promise((res, rej) => {
@@ -37,15 +44,24 @@ function ItemPost() {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0);
 
-    const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
-    const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    const blob = await new Promise((res) =>
+      canvas.toBlob(res, "image/jpeg", 0.92)
+    );
+
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
+    const safeBase = sanitizeFileName(baseName);
+    const newName = safeBase + ".jpg";
+
     return new File([blob], newName, { type: "image/jpeg" });
   }
 
   /** 🔸 Supabase Storage 업로드 후 공개 URL 반환 */
   async function uploadAndGetPublicUrl(file) {
     const userId = "guest";
-    const path = `user-${userId}/${Date.now()}-${file.name}`;
+
+    // 파일 이름 sanitize
+    const safeName = sanitizeFileName(file.name || "image.jpg");
+    const path = `user-${userId}/${Date.now()}-${safeName}`;
 
     const ext = file.name.split(".").pop()?.toLowerCase();
     let contentType = file.type || "application/octet-stream";
@@ -62,7 +78,9 @@ function ItemPost() {
       throw new Error(error.message || "Upload failed");
     }
 
-    const { data: pub } = supabase.storage.from("items").getPublicUrl(data.path);
+    const { data: pub } = supabase.storage
+      .from("items")
+      .getPublicUrl(data.path);
     console.log("[upload ok]", pub?.publicUrl);
     return pub.publicUrl;
   }
@@ -103,11 +121,11 @@ function ItemPost() {
         setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
       } catch (err) {
         console.warn("classify failed", err);
-        setErrorMsg("image clssify failed (upload is successful");
+        setErrorMsg("Image classify failed (upload succeeded).");
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "upload failed");
+      setErrorMsg(err.message || "Upload failed");
     } finally {
       setLoading(false);
       e.target.value = "";
@@ -147,7 +165,9 @@ function ItemPost() {
           url,
           sort_order: i,
         }));
-        const { error: imgErr } = await supabase.from("item_images").insert(rows);
+        const { error: imgErr } = await supabase
+          .from("item_images")
+          .insert(rows);
         if (imgErr) throw imgErr;
       }
 
@@ -157,7 +177,9 @@ function ItemPost() {
           item_id: itemId,
           tag: t.replace(/^#/, ""),
         }));
-        const { error: tagErr } = await supabase.from("item_tags").insert(rows);
+        const { error: tagErr } = await supabase
+          .from("item_tags")
+          .insert(rows);
         if (tagErr) throw tagErr;
       }
 
@@ -167,11 +189,11 @@ function ItemPost() {
           item_id: itemId,
           title,
           description: desc,
-          tags
+          tags,
         },
       });
-      
-      alert("sucessful posting!");
+
+      alert("Successful posting!");
       setTitle("");
       setDesc("");
       setPrice("");
@@ -181,7 +203,7 @@ function ItemPost() {
       navigate(`../home`);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "error on posting item");
+      setErrorMsg(err.message || "Error on posting item");
     } finally {
       setLoading(false);
     }
@@ -192,7 +214,6 @@ function ItemPost() {
       <Navbar />
       <div className="item-creation-container">
         <div className="item-creation-content">
-
           {/* 이미지 업로드 */}
           <div className="image-upload-section">
             <label className="image-upload-area">
@@ -262,13 +283,18 @@ function ItemPost() {
 
             {/* 항상 수정 가능한 Tags */}
             <div className="form-group">
-              <label className="form-label">Tags (auto, comma separated)</label>
+              <label className="form-label">
+                Tags (auto, comma separated)
+              </label>
               <input
                 className="form-input"
                 value={tags.join(", ")}
                 onChange={(e) =>
                   setTags(
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
+                    e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean)
                   )
                 }
                 placeholder="tag1, tag2"
@@ -277,7 +303,11 @@ function ItemPost() {
 
             {/* 등록 버튼 */}
             <div className="post-section">
-              <button className="post-button" onClick={onPost} disabled={loading}>
+              <button
+                className="post-button"
+                onClick={onPost}
+                disabled={loading}
+              >
                 {loading ? "Processing..." : "Click to post"}
               </button>
               {errorMsg && <p className="error-text">{errorMsg}</p>}
