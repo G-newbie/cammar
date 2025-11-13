@@ -10,7 +10,7 @@ function ItemDetail() {
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-  const navigate = useNavigate(); // ✅ 페이지 이동용
+  const navigate = useNavigate(); // 페이지 이동용
 
   useEffect(() => {
     async function fetchItemAndSimilar() {
@@ -18,7 +18,7 @@ function ItemDetail() {
         setLoading(true);
         setErrorMsg("");
 
-        // 1️⃣ 아이템 기본 정보 가져오기
+        // 1️ 아이템 기본 정보 가져오기
         const { data: itemData, error: itemErr } = await supabase
           .from("item_catalog")
           .select("*")
@@ -28,7 +28,7 @@ function ItemDetail() {
         if (itemErr) throw itemErr;
         setItem(itemData);
 
-        // 2️⃣ 유사 상품 추천 (RPC 호출)
+        // 2️ 유사 상품 추천 (RPC 호출)
         const { data: simData, error: simErr } = await supabase.rpc(
           "search_similar_to_item_by_id",
           { self_id: id, k: 6 }
@@ -69,7 +69,7 @@ function ItemDetail() {
       <div className="item-detail-container">
         <div className="item-detail-content">
 
-          {/* ✅ 상품 상세 */}
+          {/* 상품 상세 */}
           <div className="item-main">
             <h2 className="item-title">{item.title}</h2>
             <img
@@ -94,7 +94,7 @@ function ItemDetail() {
             </div>
           </div>
 
-          {/* ✅ 비슷한 상품 추천 */}
+          {/*  비슷한 상품 추천 */}
           <div className="similar-section">
             <h3>🧠 Similar Items</h3>
             <div className="similar-grid">
@@ -103,7 +103,7 @@ function ItemDetail() {
                 <div
                   key={sim.id}
                   className="similar-card"
-                  onClick={() => navigate(`/item/${sim.id}`)} // ✅ 클릭 시 이동
+                  onClick={() => navigate(`/item/${sim.id}`)} // 클릭 시 이동
                   style={{ cursor: "pointer" }}
                 >
                   <img
