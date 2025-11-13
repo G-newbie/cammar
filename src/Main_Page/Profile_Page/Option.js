@@ -97,13 +97,6 @@ function Option(props) {
             price: 4
         }
     ]
-    
-
-    // Determine what to show based on props
-    const isMyItems = props.mode == "myItem" ? true : false;
-    const isViewedItems = props.mode == "viewedItem" ? true : false;
-    const isPosts = props.mode == "post" ? true : false;
-    const isFavorite = props.mode == "favorite" ? true : false;
 
     useEffect(() => {
         const loadData = async () => {
@@ -137,6 +130,9 @@ function Option(props) {
                         else {
                         setError(res_userItem.res_msg || 'Failed to load items');
                         }
+                        break;
+                    case "history":
+                        /* Update item array state using API calls for history */
                         break;                   
                     case "post":
                         const res_post = await getUserPosts(currentUser.id);
