@@ -173,33 +173,33 @@ function OptionPage() {
   return (
       <div>
           <Navbar />
-          <div className="opTitleCtn">
-              <div className="opTitle">{getTitle()}</div>
+          <div className="opTitleCtn_sep">
+              <div className="opTitle_sep">{getTitle()}</div>
           </div>
           {loading && <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>}
           {error && <div style={{ padding: 20, textAlign: 'center', color: 'red' }}>{error}</div>}
           {!loading && !error && (
-              <div className="opItems">
+              <div className="opItems_sep">
                   {items.length === 0 ? (
                       <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No items found</div>
                   ) : (
                       items.map(item => (
                           <div 
                               key={item.id} 
-                              className="opItem"
+                              className="opItem_sep"
                               onClick={() => navigate(`/item/${item.id}`)}
                               style={{ cursor: 'pointer' }}
                           >
-                              <div className="opImage">
+                              <div className="opImage_sep">
                                   <img 
                                       src={item.image || './profile.png'} 
                                       alt={item.title || item.name} 
                                   />
                               </div>
-                              <div className="opInfo">
-                                  <h3 className="opName">{item.title || item.name}</h3>
-                                  <p className="opPrice">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
-                                  <p className="opSeller">Seller Name</p>
+                              <div className="opInfo_sep">
+                                  <h3 className="opName_sep">{item.title || item.name}</h3>
+                                  <p className="opPrice_sep">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
+                                  <p className="opSeller_sep">Seller Name</p>
                               </div>
                           </div>
                       ))
