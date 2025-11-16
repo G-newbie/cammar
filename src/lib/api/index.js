@@ -57,6 +57,10 @@ export {
 
 export * from './notifications';
 
+export * from './chatRealtime';
+
+export * from './history';
+
 export {
   uploadImage,
   uploadMultipleImages,

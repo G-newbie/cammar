@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Option.css';
-import { getCurrentUser, getUserPosts, getUserItems, getUserWishlists } from '../../lib/api';
+import { getCurrentUser, getUserPosts, getUserItems, getUserWishlists, getUserViewHistory } from '../../lib/api';
 
 function Option(props) {
     const location = useLocation();
@@ -11,92 +11,7 @@ function Option(props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const testList = [
-        {
-            id: 1,
-            title: "tst1",
-            description: "tst1",
-            category: null,
-            price: 1
-        },
-        {
-            id: 2,
-            title: "tst2",
-            description: "tst2",
-            category: null,
-            price: 2
-        },
-        {
-            id: 3,
-            title: "tst3",
-            description: "tst3",
-            category: null,
-            price: 3
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        }
-    ]
+    // Removed test list; use real data from API
 
     useEffect(() => {
         const loadData = async () => {
@@ -132,7 +47,21 @@ function Option(props) {
                         }
                         break;
                     case "history":
-                        /* Update item array state using API calls for history */
+                        // Try server history first (if logged in); fallback to localStorage
+                        try {
+                            const server = await getUserViewHistory(currentUser.id, { limit: 12 });
+                            if (server.res_code === 200) {
+                                setItems(server.items || []);
+                                break;
+                            }
+                        } catch (_e) { /* swallow */ }
+                        try {
+                            const raw = localStorage.getItem('recent_items');
+                            const list = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
+                            setItems(list);
+                        } catch (e) {
+                            setItems([]);
+                        }
                         break;                   
                     case "post":
                         const res_post = await getUserPosts(currentUser.id);
@@ -169,27 +98,35 @@ function Option(props) {
 
     return (
         <div className="opItems d-flex">
-            { testList.map(item => (
-                    <div 
-                        key={item.id} 
-                        className="opItem"
-                        onClick={() => navigate(`/item/${item.id}`)}
-                        style={{ cursor: 'pointer' }}
-                    >
-                        <div className="opImage">
-                            <img 
-                                src={item.image || 'https://via.placeholder.com/100x100/cccccc/666666?text=No+Image'} 
-                                alt={item.title || item.name} 
-                            />
-                        </div>
-                        <div className="opInfo">
-                            <h3 className="opName">{item.title || item.name}</h3>
-                            <p className="opPrice">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
-                            <div className="opSeller">Seller Name</div>
-                        </div>
+            {loading && (
+                <div className="opPlaceholder">Loading...</div>
+            )}
+            {!loading && error && (
+                <div className="opError">{error}</div>
+            )}
+            {!loading && !error && items.length === 0 && (
+                <div className="opPlaceholder">No items to display.</div>
+            )}
+            {!loading && !error && items.map(item => (
+                <div 
+                    key={item.id} 
+                    className="opItem"
+                    onClick={() => navigate(`/item/${item.id}`)}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className="opImage">
+                        <img 
+                            src={item.image || 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><rect width=\"100%\" height=\"100%\" fill=\"%23cccccc\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-size=\"12\" fill=\"%23666666\" style=\"font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;\">No Image</text></svg>'} 
+                            alt={item.title || item.name} 
+                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><rect width=\"100%\" height=\"100%\" fill=\"%23cccccc\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-size=\"12\" fill=\"%23666666\" style=\"font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;\">No Image</text></svg>'; }}
+                        />
                     </div>
-                ))
-            }
+                    <div className="opInfo">
+                        <h3 className="opName">{item.title || item.name}</h3>
+                        <p className="opPrice">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
+                    </div>
+                </div>
+            ))}
         </div>
     )
 }
