@@ -21,15 +21,17 @@ function Chatroom({ selectedChat, messages = [], onSendMessage, loading, error }
                 {canInteract && !loading && !error && messages.length === 0 && (
                     <div className="chatroom-placeholder">No messages yet. Send the first one!</div>
                 )}
-                {canInteract && !loading && !error && messages.map(message => (
-                    <div key={message.id} className={`message ${message.isOwn ? 'own-message' : 'other-message'}`}>
+                {canInteract && !loading && !error && messages.map(message => {
+                    const key = message.id != null ? message.id : `${message.senderId}-${message.timestamp}`;
+                    return (
+                    <div key={key} className={`message ${message.isOwn ? 'own-message' : 'other-message'}`}>
                         <div className="message-header">
                             <span className="message-sender">{message.senderName}</span>
                             <span className="message-timestamp">{message.timestamp}</span>
                         </div>
                         <div className="message-content">{message.message}</div>
                     </div>
-                ))}
+                )})}
             </div>
             <div className="chatroom-input">
                 <input 

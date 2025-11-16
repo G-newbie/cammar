@@ -202,7 +202,14 @@ function ChattingPage() {
                     timestamp: formatMessageTime(message.created_at),
                     isOwn: message.sender.id === currentUser?.id // Compare with current user
                 }));
-                setMessages(transformedMessages);
+                // Deduplicate with existing messages by id
+                setMessages(prev => {
+                    const byId = new Map();
+                    [...prev, ...transformedMessages].forEach(m => {
+                        if (m && m.id != null) byId.set(m.id, m);
+                    });
+                    return Array.from(byId.values());
+                });
                 
                 // Mark messages as read when loading chat room
                 if (currentUser) {
