@@ -128,6 +128,11 @@ function ItemPost() {
     }
   }
 
+  /** 🔸 썸네일 클릭 시 해당 이미지 제거 */
+  function removeImage(url) {
+    setImageUrls((prev) => prev.filter((u) => u !== url));
+  }
+
   /** 🔸 게시물 등록 */
   async function onPost() {
     setLoading(true);
@@ -136,9 +141,10 @@ function ItemPost() {
       if (!title.trim()) throw new Error("Title is required.");
       if (!currentUserId) throw new Error("Please sign in to post an item.");
 
+      // price: only integer allowed; empty -> null
       const cleanPrice =
-        price && String(price).trim() !== ""
-          ? Number(String(price).replace(/[^0-9.]/g, ""))
+        price !== "" && price != null
+          ? parseInt(String(price).replace(/\D/g, ""), 10)
           : null;
 
       const { data: itemRow, error: itemErr } = await supabase
@@ -225,7 +231,18 @@ function ItemPost() {
             {imageUrls.length > 0 && (
               <div className="preview-grid">
                 {imageUrls.map((u) => (
-                  <img key={u} src={u} className="preview-thumb" alt="preview" />
+                  <div key={u} className="preview-item-wrapper">
+                    <img src={u} className="preview-thumb" alt="preview" />
+                    <button
+                      type="button"
+                      className="preview-remove-btn"
+                      aria-label="Remove image"
+                      title="Remove this image"
+                      onClick={(e) => { e.stopPropagation(); removeImage(u); }}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -258,8 +275,11 @@ function ItemPost() {
               <label className="form-label">Price</label>
               <input
                 className="form-input"
+                type="text"
+                inputMode="numeric"
+                pattern="\\d*"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => setPrice(e.target.value.replace(/\\D/g, ""))}
                 placeholder="Enter price (e.g., 40000)"
               />
             </div>

@@ -98,14 +98,17 @@ function ChattingPage() {
                 setMessages(prev => {
                     const exists = prev.some(m => m.id === messageData.id);
                     if (exists) return prev;
-                    return [...prev, {
+                    const next = [...prev, {
                         id: messageData.id,
                         senderId: messageData.senderId,
                         senderName: messageData.senderName,
                         message: messageData.content,
                         timestamp: formatMessageTime(messageData.created_at),
-                        isOwn: messageData.senderId === currentUserId
+                        isOwn: messageData.senderId === currentUserId,
+                        createdAt: new Date(messageData.created_at).getTime()
                     }];
+                    // keep ascending by createdAt so newest is at bottom
+                    return next.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
                 });
 
                 if (selectedChat && selectedChat.id === messageData.chat_room_id) {
@@ -200,7 +203,8 @@ function ChattingPage() {
                     senderName: message.sender.display_name,
                     message: message.content,
                     timestamp: formatMessageTime(message.created_at),
-                    isOwn: message.sender.id === currentUser?.id // Compare with current user
+                    isOwn: message.sender.id === currentUser?.id, // Compare with current user
+                    createdAt: new Date(message.created_at).getTime()
                 }));
                 // Deduplicate with existing messages by id
                 setMessages(prev => {
@@ -208,7 +212,9 @@ function ChattingPage() {
                     [...prev, ...transformedMessages].forEach(m => {
                         if (m && m.id != null) byId.set(m.id, m);
                     });
-                    return Array.from(byId.values());
+                    const arr = Array.from(byId.values());
+                    arr.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+                    return arr;
                 });
                 
                 // Mark messages as read when loading chat room
@@ -263,14 +269,19 @@ function ChattingPage() {
             { chatRoomId: selectedChat.id, content: messageContent, currentUser },
             { 
                 onOptimistic: (msg) => {
-                    setMessages(prev => [...prev, {
+                    setMessages(prev => {
+                        const next = [...prev, {
                         id: msg.id,
                         senderId: msg.senderId,
                         senderName: msg.senderName,
                         message: msg.content,
                         timestamp: formatMessageTime(msg.created_at),
-                        isOwn: true
-                    }]);
+                        isOwn: true,
+                        createdAt: new Date(msg.created_at).getTime()
+                    }];
+                        next.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+                        return next;
+                    });
                 },
                 onAfterPersist: (msg) => {
                     const now = new Date().toISOString();

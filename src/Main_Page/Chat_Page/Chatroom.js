@@ -1,5 +1,18 @@
+import { useEffect, useRef } from 'react';
+
 function Chatroom({ selectedChat, messages = [], onSendMessage, loading, error }) {
     const canInteract = Boolean(selectedChat);
+    const endRef = useRef(null);
+
+    useEffect(() => {
+        if (!canInteract) return;
+        try {
+            if (endRef.current) {
+                endRef.current.scrollIntoView({ behavior: loading ? 'auto' : 'smooth', block: 'end' });
+            }
+        } catch (_) { /* no-op */ }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [messages, selectedChat, loading]);
 
     return (
         <div className="chatroom-container">
@@ -32,6 +45,7 @@ function Chatroom({ selectedChat, messages = [], onSendMessage, loading, error }
                         <div className="message-content">{message.message}</div>
                     </div>
                 )})}
+                <div ref={endRef} />
             </div>
             <div className="chatroom-input">
                 <input 
