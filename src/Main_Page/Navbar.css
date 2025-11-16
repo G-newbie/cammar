@@ -4,22 +4,36 @@
     border-color: gray;
 }
 
-.logo {
-    width: 30px;
+.navbarLogo {
+    width: 50px;
 }
 
 .iconCtn {
     display: flex;
     align-items: center;
 }
-
 .iconCtn .nav-item {
     display: flex;
     align-items: center;
+    margin-left: 15px;
 }
-
 .iconCtn .nav-link {
     display: flex;
     align-items: center;
     padding: 0.5rem;
+}
+.navCommunity {
+    font-size: 18px;
+    font-weight: bold;
+}
+.navChats {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.bi {
+    font-size: 22px;
+}
+.bi-person {
+    font-size: 25px;
 }

@@ -96,9 +96,9 @@ function Navbar() {
     return (
         <nav className="navbar navbar-expand-md">
             <div className="container-fluid">
-                <div className="navbar-header logoCtn">
+                <div className="navbar-header navbarLogoCtn">
                     <Link className='nav-link' to='/home'>
-                        <img src={logo} className="navbar-brand logo"></img>
+                        <img src={logo} className="navbar-brand navbarLogo"></img>
                     </Link>
                 </div>
                 <ul className="navbar-nav navCtn">
