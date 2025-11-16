@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import Navbar from "../Navbar";
 import "./ItemDetail.css";
-import { createChatRoomFromItem, getItemDetails } from "../../lib/api";
+import { createChatRoomFromItem, getItemDetails, recordItemView } from "../../lib/api";
 
 function ItemDetail() {
   const { id } = useParams(); // URL에서 아이템 ID 가져오기
@@ -51,6 +51,34 @@ function ItemDetail() {
             baseItem.seller?.trust_score ??
             null,
         });
+
+        // 3️⃣ 최근 본 상품 로컬 저장소에 기록
+        try {
+          const viewed = {
+            id: baseItem.id,
+            title: baseItem.title,
+            price: baseItem.price ?? null,
+            image: baseItem.image_url || baseItem.images?.[0]?.url || null
+          };
+          const key = 'recent_items';
+          const raw = localStorage.getItem(key);
+          const list = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
+          // 중복 제거: 동일 id 제거 후 맨 앞에 추가
+          const filtered = list.filter((x) => x && x.id !== viewed.id);
+          const next = [viewed, ...filtered].slice(0, 12); // 최대 12개 보관
+          localStorage.setItem(key, JSON.stringify(next));
+        } catch (e) {
+          // ignore localStorage errors
+          console.warn('failed to update recent_items', e);
+        }
+
+        // 4️⃣ 로그인 유저라면 서버에도 기록(무시 가능)
+        try {
+          await recordItemView(baseItem.id);
+        } catch (e) {
+          // ignore server errors for UX
+          console.warn('failed to record item view on server', e);
+        }
 
         // 2️⃣ 유사 상품 추천 (RPC 호출)
         const { data: simData, error: simErr } = await supabase.rpc(
@@ -132,7 +160,7 @@ function ItemDetail() {
           <div className="item-main">
             <h2 className="item-title">{item.title}</h2>
             <img
-              src={item.image_url || "https://placehold.co/400x300"}
+              src={item.image_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="%23cccccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="%23666666" style="font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;">No Image</text></svg>'}
               alt={item.title}
               className="item-main-image"
             />
@@ -190,7 +218,7 @@ function ItemDetail() {
                   style={{ cursor: "pointer" }}
                 >
                   <img
-                    src={sim.image_url || "https://placehold.co/200x150"}
+                    src={sim.image_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"><rect width="100%" height="100%" fill="%23cccccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="14" fill="%23666666" style="font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;">No Image</text></svg>'}
                     alt={sim.title}
                     className="similar-img"
                   />
