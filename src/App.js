@@ -28,7 +28,12 @@ import ItemDetail from './Main_Page/Market_Page/ItemDetail.js'; // ✅ 새로 �
 import Profile from './Main_Page/Profile_Page/Profile.js';
 import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
 import OptionPage from './Main_Page/Profile_Page/OptionPage.js';
+
+// Admin Pages
 import Admin from './Main_Page/Admin_Page/Admin.js';
+import AdminUsers from './Main_Page/Admin_Page/AdminUsers.js'
+import AdminItems from './Main_Page/Admin_Page/AdminItems.js'
+import AdminPosts from './Main_Page/Admin_Page/AdminPosts.js'
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -65,7 +70,12 @@ function App() {
         <Route path='/profile' element={<Profile />} />
         <Route path='/profileEdit' element={<ProfileEdit />} />
         <Route path='/option/:mode' element={<OptionPage />} />
+
+        {/* -------- Admin Pages -------- */}
         <Route path='/admin' element={<Admin />} />
+        <Route path='/admin/users' element={<AdminUsers />} />
+        <Route path='/admin/items' element={<AdminItems />} />
+        <Route path='/admin/posts' element={<AdminPosts />} />
 
       </Routes>
     </BrowserRouter>

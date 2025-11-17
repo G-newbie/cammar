@@ -3,6 +3,7 @@ import { getCurrentUser, signOut } from '../../lib/api/index.js';
 
 import Navbar from '../Navbar.js';
 import './Admin.css'
+import { Link } from 'react-router-dom';
 
 function Admin() {
   const [isAdmin, setAdmin] = useState(false);
@@ -40,13 +41,19 @@ function Admin() {
 
         <ul className="nav flex-column adminOptionList">
           <li className="nav-item adminOptionItem">
-            <div className="adminOption">Configure Users</div>
+            <Link to='./users'>
+              <div className="adminOption">Configure Users</div>
+            </Link>
           </li>
           <li className="nav-item adminOptionItem">
-            <div className="adminOption">Configure Market Item Posts</div>
+            <Link to='./items'>
+              <div className="adminOption">Configure Market Item Posts</div>
+            </Link>
           </li>
           <li className="nav-item adminOptionItem">
-            <div className="adminOption">Configure Community Posts</div>
+            <Link to='./posts'>
+              <div className="adminOption">Configure Community Posts</div>
+            </Link>
           </li>
         </ul>
       </div>
