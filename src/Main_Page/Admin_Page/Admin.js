@@ -17,8 +17,11 @@ function Admin() {
             try {
                 const res = await getCurrentUser();
                 if (res.res_code === 200) {
-                  if (res.is_admin)
+                  if (res.user && res.user.is_admin) {
                     setAdmin(res.user);
+                  } else {
+                    setError('You are not authorized to access this page');
+                  }
                 } else {
                     setError(res.res_msg || 'Failed to load user');
                 }
@@ -30,6 +33,31 @@ function Admin() {
         };
         checkAdmin();
     }, []);
+
+  if (loading) {
+    return (
+      <div>
+        <Navbar />
+        <div className="adminCtn">
+          <div>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !isAdmin) {
+    return (
+      <div>
+        <Navbar />
+        <div className="adminCtn">
+          <div className="adminTitle">Access Denied</div>
+          <div className="adminDesc" style={{ color: 'red' }}>
+            {error || 'You are not authorized to access this page'}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -57,15 +85,6 @@ function Admin() {
           </li>
         </ul>
       </div>
-
-      {/* {
-      isAdmin ? (
-        <div>Hello, Admin.</div>
-      ) :
-      (
-        <div>You are unauthorized to open this page.</div>
-      )
-      } */}
     </div>
   )
 }
