@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getCurrentUser, signOut } from '../../lib/api';
+import { getCurrentUser, signOut } from '../../lib/api/index.js';
 
 import Navbar from '../Navbar.js';
 import './Admin.css'
@@ -33,14 +33,32 @@ function Admin() {
   return (
     <div>
       <Navbar />
-      {
+
+      <div className="adminCtn">
+        <div className="adminTitle">Dashboard</div>
+        <div className="adminDesc">Welcome, Admin.</div>
+
+        <ul className="nav flex-column adminOptionList">
+          <li className="nav-item adminOptionItem">
+            <div className="adminOption">Configure Users</div>
+          </li>
+          <li className="nav-item adminOptionItem">
+            <div className="adminOption">Configure Market Item Posts</div>
+          </li>
+          <li className="nav-item adminOptionItem">
+            <div className="adminOption">Configure Community Posts</div>
+          </li>
+        </ul>
+      </div>
+
+      {/* {
       isAdmin ? (
         <div>Hello, Admin.</div>
       ) :
       (
         <div>You are unauthorized to open this page.</div>
       )
-      }
+      } */}
     </div>
   )
 }
