@@ -110,6 +110,9 @@ function Navbar() {
                     </li>
                 </ul>
                 <ul className="navbar-nav ms-auto align-items-center iconCtn">
+                    <li className="nav-item adminIcon">
+                        <Link className='nav-link' to='/admin'><span className="bi bi-file-earmark-person"></span></Link>
+                    </li>
                     <li className="nav-item searchIcon">
                         <Link className='nav-link' to='/search'><span className="bi bi-search"></span></Link>
                     </li>

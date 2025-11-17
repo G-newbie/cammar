@@ -28,6 +28,7 @@ import ItemDetail from './Main_Page/Market_Page/ItemDetail.js'; // ✅ 새로 �
 import Profile from './Main_Page/Profile_Page/Profile.js';
 import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
 import OptionPage from './Main_Page/Profile_Page/OptionPage.js';
+import Admin from './Main_Page/Profile_Page/Admin.js';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -64,6 +65,7 @@ function App() {
         <Route path='/profile' element={<Profile />} />
         <Route path='/profileEdit' element={<ProfileEdit />} />
         <Route path='/option/:mode' element={<OptionPage />} />
+        <Route path='/admin' element={<Admin />} />
 
       </Routes>
     </BrowserRouter>
