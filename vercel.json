@@ -3,12 +3,6 @@
   "outputDirectory": "build",
   "framework": "create-react-app",
   "installCommand": "npm install",
-  "devCommand": "npm start",
-  "rewrites": [
-    {
-      "source": "/((?!static|manifest.json|favicon.ico|logo.*\\.png).*)",
-      "destination": "/index.html"
-    }
-  ]
+  "devCommand": "npm start"
 }
 
