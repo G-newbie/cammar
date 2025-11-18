@@ -284,12 +284,12 @@ export default function Post() {
                       {contactingAuthor ? 'Starting chat...' : 'Contact'}
                     </button>
                   )}
-                  {(post.author?.id === currentUserId || isAdmin) && (
+                  {post.author?.id === currentUserId && (
                     <button className="post-edit-btn" onClick={startEditing}>
                       Edit
                     </button>
                   )}
-                  {(post.author?.id === currentUserId || isAdmin) && (
+                  {post.author?.id === currentUserId && (
                     <button className="post-delete-btn" onClick={handleDelete}>
                       Delete
                     </button>
