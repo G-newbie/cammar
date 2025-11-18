@@ -43,15 +43,15 @@ export const getPostDetails = async (postId) => {
       id: post.id,
       title: post.title,
       content: post.content,
-      author: {
+      author: post.users ? {
         id: post.users.id,
         display_name: post.users.display_name,
         trust_score: post.users.trust_score
-      },
-      community: {
+      } : null,
+      community: post.communities ? {
         id: post.communities.id,
         name: post.communities.name
-      },
+      } : null,
       upvotes: post.upvotes,
       downvotes: post.downvotes,
       comment_count: post.comment_count,
