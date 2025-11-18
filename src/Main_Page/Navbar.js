@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../Welcome_Page/logo.png';
@@ -6,17 +6,100 @@ import { supabase } from '../lib/supabaseClient';
 
 function Navbar() {
     const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const subscribedRef = useRef(false);
+    const deduplicationRef = useRef(false);
+
+    // Remove duplicate notifications and calculate unreadCount
+    const deduplicatedNotifications = useMemo(() => {
+        const seen = new Set();
+        return notifications.filter(notif => {
+            // Create unique key for each notification
+            let key;
+            if (notif.payload?.chat_room_id) {
+                key = `${notif.type}-${notif.payload.chat_room_id}`;
+            } else if (notif.payload?.comment_id) {
+                key = `${notif.type}-${notif.payload.comment_id}`;
+            } else {
+                key = notif.id;
+            }
+            
+            if (seen.has(key)) {
+                return false; // Duplicate, filter out
+            }
+            seen.add(key);
+            return true;
+        });
+    }, [notifications]);
+
+    // Calculate unreadCount from deduplicated notifications array (always in sync)
+    const unreadCount = useMemo(() => {
+        return Math.min(99, deduplicatedNotifications.filter(notif => !notif.is_read).length);
+    }, [deduplicatedNotifications]);
 
     // Broadcast-only model: no polling
     useEffect(() => {
         setNotificationsLoading(false);
     }, [showNotifications]);
 
+    // Remove duplicates from notifications array (only when duplicates are detected)
+    useEffect(() => {
+        if (deduplicationRef.current) return; // Already deduplicated in this cycle
+        
+        const seen = new Set();
+        let hasDuplicates = false;
+        
+        notifications.forEach(notif => {
+            let key;
+            if (notif.payload?.chat_room_id) {
+                key = `${notif.type}-${notif.payload.chat_room_id}`;
+            } else if (notif.payload?.comment_id) {
+                key = `${notif.type}-${notif.payload.comment_id}`;
+            } else {
+                key = notif.id;
+            }
+            
+            if (seen.has(key)) {
+                hasDuplicates = true;
+            } else {
+                seen.add(key);
+            }
+        });
+        
+        if (hasDuplicates) {
+            deduplicationRef.current = true;
+            // Remove duplicates, keeping the first occurrence
+            setNotifications(prev => {
+                const seen = new Set();
+                const filtered = prev.filter(notif => {
+                    let key;
+                    if (notif.payload?.chat_room_id) {
+                        key = `${notif.type}-${notif.payload.chat_room_id}`;
+                    } else if (notif.payload?.comment_id) {
+                        key = `${notif.type}-${notif.payload.comment_id}`;
+                    } else {
+                        key = notif.id;
+                    }
+                    
+                    if (seen.has(key)) {
+                        return false;
+                    }
+                    seen.add(key);
+                    return true;
+                });
+                // Reset flag after state update
+                setTimeout(() => { deduplicationRef.current = false; }, 0);
+                return filtered;
+            });
+        }
+    }, [notifications]);
+
     // Broadcast subscriptions for notifications (subscribe once after mount/login)
     useEffect(() => {
+        // Prevent duplicate subscriptions (React Strict Mode in dev)
+        if (subscribedRef.current) return;
+        
         let channelUser;
         let channelAll;
         async function subscribe() {
@@ -24,21 +107,64 @@ function Navbar() {
                 const { data } = await supabase.auth.getUser();
                 const uid = data?.user?.id;
                 if (!uid) return;
+                
+                subscribedRef.current = true;
                 // user-specific channel
                 channelUser = supabase
                     .channel(`notify:${uid}`)
                     .on('broadcast', { event: 'notify' }, ({ payload }) => {
-                        const n = {
-                            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                            type: payload?.type || 'announcement',
-                            title: payload?.title || 'Notification',
-                            content: payload?.content || '',
-                            created_at: new Date().toISOString(),
-                            is_read: false,
-                            payload
-                        };
-                        setNotifications(prev => [n, ...prev].slice(0, 50));
-                        setUnreadCount(prev => Math.min(99, prev + 1));
+                        // Create unique notification ID based on payload to prevent duplicates
+                        let notificationKey;
+                        if (payload?.chat_room_id) {
+                            // Chat room notification: use chat_room_id
+                            notificationKey = `${payload.type}-${payload.chat_room_id}`;
+                        } else if (payload?.comment_id) {
+                            // Comment notification: use comment_id (unique per comment)
+                            notificationKey = `${payload.type}-${payload.comment_id}`;
+                        } else {
+                            // Other notifications: use timestamp + random
+                            notificationKey = `${payload?.type}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                        }
+                        
+                        setNotifications(prev => {
+                            // Check if notification already exists
+                            const exists = prev.some(n => {
+                                // Check by notification ID first (most reliable)
+                                if (n.id === notificationKey) {
+                                    return true;
+                                }
+                                
+                                // Check by payload content
+                                if (payload?.chat_room_id && n.payload?.chat_room_id) {
+                                    // Chat room notification: check chat_room_id + type
+                                    return n.payload.chat_room_id === payload.chat_room_id && 
+                                           n.type === payload?.type;
+                                } else if (payload?.comment_id && n.payload?.comment_id) {
+                                    // Comment notification: check comment_id (unique per comment)
+                                    return n.payload.comment_id === payload.comment_id;
+                                }
+                                
+                                return false;
+                            });
+                            
+                            if (exists) {
+                                return prev; // Don't add duplicate
+                            }
+                            
+                            const n = {
+                                id: notificationKey,
+                                type: payload?.type || 'announcement',
+                                title: payload?.title || 'Notification',
+                                content: payload?.content || '',
+                                created_at: new Date().toISOString(),
+                                is_read: false,
+                                payload
+                            };
+                            
+                            const nextNotifications = [n, ...prev].slice(0, 50);
+                            // unreadCount is now calculated from notifications array via useMemo
+                            return nextNotifications;
+                        });
                     })
                     .subscribe();
                 // global announcements
@@ -54,8 +180,11 @@ function Navbar() {
                             is_read: false,
                             payload
                         };
-                        setNotifications(prev => [n, ...prev].slice(0, 50));
-                        setUnreadCount(prev => Math.min(99, prev + 1));
+                        setNotifications(prev => {
+                            const nextNotifications = [n, ...prev].slice(0, 50);
+                            // unreadCount is now calculated from notifications array via useMemo
+                            return nextNotifications;
+                        });
                     })
                     .subscribe();
             } catch (e) {
@@ -64,6 +193,7 @@ function Navbar() {
         }
         subscribe();
         return () => {
+            subscribedRef.current = false;
             if (channelUser) supabase.removeChannel(channelUser);
             if (channelAll) supabase.removeChannel(channelAll);
         };
@@ -72,21 +202,15 @@ function Navbar() {
     const handleMarkAsRead = (notificationId, e) => {
         if (e && e.stopPropagation) e.stopPropagation();
         setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
     };
 
     const handleMarkAllAsRead = (e) => {
         e.stopPropagation();
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-        setUnreadCount(0);
     };
 
     const handleDelete = (notificationId, e) => {
         e.stopPropagation();
-        const deleted = notifications.find(n => n.id === notificationId);
-        if (deleted && !deleted.is_read) {
-            setUnreadCount(prev => Math.max(0, prev - 1));
-        }
         setNotifications(prev => prev.filter(n => n.id !== notificationId));
     };
 
@@ -165,10 +289,10 @@ function Navbar() {
                                 <div style={{ maxHeight: 350, overflowY: 'auto' }}>
                                     {notificationsLoading ? (
                                         <div style={{ padding: 20, textAlign: 'center' }}>Loading...</div>
-                                    ) : notifications.length === 0 ? (
+                                    ) : deduplicatedNotifications.length === 0 ? (
                                         <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No notifications</div>
                                     ) : (
-                                        notifications.map(notif => (
+                                        deduplicatedNotifications.map(notif => (
                                             <div
                                                 key={notif.id}
                                                 style={{

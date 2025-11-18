@@ -113,9 +113,14 @@ function ChattingPage() {
     // Load messages when selected chat room changes
     useEffect(() => {
         if (selectedChat && selectedChat.id) {
+            // Clear previous messages when switching chat rooms
+            setMessages([]);
             loadMessages(selectedChat.id);
+        } else {
+            // Clear messages when no chat is selected
+            setMessages([]);
         }
-    }, [selectedChat]);
+    }, [selectedChat?.id]);
 
     // 메시지 리얼타임 채널 (broadcast + postgres 백업) 생성
     useEffect(() => {
@@ -137,6 +142,10 @@ function ChattingPage() {
             currentUser?.id || null,
             // onBroadcastMessage
             (messageData, currentUserId) => {
+                // Only add message if it belongs to the currently selected chat room
+                if (!selectedChat || selectedChat.id !== messageData.chat_room_id) {
+                    return;
+                }
                 setMessages(prev => {
                     const exists = prev.some(m => m.id === messageData.id);
                     if (exists) return prev;
@@ -272,16 +281,8 @@ function ChattingPage() {
                     isOwn: message.sender.id === currentUser?.id, // Compare with current user
                     createdAt: new Date(message.created_at).getTime()
                 }));
-                // Deduplicate with existing messages by id
-                setMessages(prev => {
-                    const byId = new Map();
-                    [...prev, ...transformedMessages].forEach(m => {
-                        if (m && m.id != null) byId.set(m.id, m);
-                    });
-                    const arr = Array.from(byId.values());
-                    arr.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
-                    return arr;
-                });
+                // Replace messages completely (don't merge with previous chat room's messages)
+                setMessages(transformedMessages.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0)));
                 
                 // Mark messages as read when loading chat room
                 if (currentUser) {
